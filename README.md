@@ -4,7 +4,7 @@ M/DB is an Open Source clone of SimpleDB
 
 ## License
 
-Copyright (c) 2004-9 M/Gateway Developments Ltd,
+Copyright (c) 2004-10 M/Gateway Developments Ltd,
 Reigate, Surrey UK.
 All rights reserved.
 
