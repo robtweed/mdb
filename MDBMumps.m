@@ -33,7 +33,7 @@ buildDate()
  ;
  ;
 install
- k ^MDBAPI("mdbm")
+ ;k ^MDBAPI("mdbm")
  s ^MDBAPI("mdbm","BatchSet")="batchSet^MDBMumps"
  s ^MDBAPI("mdbm","Decrement")="increment^MDBMumps"
  s ^MDBAPI("mdbm","Get")="get^MDBMumps"
@@ -50,6 +50,7 @@ install
  QUIT
  ;
 getVersion(%KEY,response)
+ d install
  i $g(%KEY("OutputFormat"))="JSON" d  QUIT ""
  . s response(1)="{""Name"":""M/DB:Mumps"",""Build"":"_$$version()_",""Date"":"""_$$buildDate()_"""}"
  ;
