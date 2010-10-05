@@ -25,9 +25,19 @@ This Free Open Source version of M/DB is designed for use with the GT.M database
 
     git clone git://github.com/robtweed/mdb.git
 
-The destination directory in which you'll find the files will depend on your git configuration.
+ The destination directory in which you'll find the files is determined by the path in which you ran the above command.
 	
-Then, copy the files MDB.m and MDBMumps.m to your working GT.M directory (eg, on the M/DB Appliance, /usr/local/gtm/ewd)
+Then copy the files *MDB.m* and *MDBMumps.m* to your working GT.M directory (eg, on the M/DB Appliance, */usr/local/gtm/ewd*)
+
+## Background
+
+M/DB is an Open Source clone of SimpleDB that uses the Open Source GT.M Mumps database as the storage engine.  M/DB behaves identically to SimpleDB, sharing its APIs.
+
+The *mdb* repository also include M/DB:Mumps which provides an HTTP-based interface to the standard Mumps database.  The interface makes use of the same security mechanism as SimpleDB to protect access to the back-end Mumps database.
+
+M/DB:Mumps requires M/DB to be in place and initialised before it can be used.
+
+The Node.js module *node-mdbm* makes use of M/DB:Mumps to provide the HTTP interface to/from the Mumps database.
 
 
     

@@ -23,25 +23,19 @@ MDBMumps ; M/DB:Mumps API methods
  ; | along with this program.  If not, see <http://www.gnu.org/licenses/>.    |
  ; ----------------------------------------------------------------------------
  ;
- ; *********************************
- ;   To manually install/update dispatch calls for M/DB:
- ;    
- ;    do install^MDBMumps
- ;
- ; *********************************
- ;
  QUIT
  ;
 version()	
  QUIT "5"
  ;
 buildDate()	
- QUIT "01 October 2010"
+ QUIT "04 October 2010"
  ;
  ;
 install
  k ^MDBAPI("mdbm")
  s ^MDBAPI("mdbm","BatchSet")="batchSet^MDBMumps"
+ s ^MDBAPI("mdbm","Decrement")="increment^MDBMumps"
  s ^MDBAPI("mdbm","Get")="get^MDBMumps"
  s ^MDBAPI("mdbm","GetJSON")="getJSON^MDBMumps"
  s ^MDBAPI("mdbm","GetVersion")="getVersion^MDBMumps"
@@ -67,17 +61,22 @@ getVersion(%KEY,response)
  ;
 setJSON(%KEY,response)
  ;
- n error,globalName,props,ref
+ n error,globalName,props,ref,subscripts
  ;
  k response
  ;
+ k ^rltkey m ^rltkey=%KEY
  s error="No JSON input was supplied"
  i $g(%KEY("JSON"))'="" s error=$$parseJSON^%zewdJSON(%KEY("JSON"),.props,1)
  i error'="" s error=action_"Error~"_error q
  ;
+ s subscripts=$g(%KEY("Subscripts"))
+ i $e(subscripts,1)="[",$e(subscripts,$l(subscripts))="]" s subscripts=$e(subscripts,2,$l(subscripts)-1)
+ ;
  i $g(%KEY("Reference"))="" QUIT "missingGlobalName~Reference (Global Name) was not specified"
  s globalName=%KEY("Reference")
  i $e(globalName,1)'="^" s globalName="^"_globalName
+ i subscripts'="" s globalName=globalName_"("_subscripts_")"
  i $g(%KEY("DeleteBeforeSave"))=1 d
  . s ref="k "_globalName
  . x ref
@@ -159,7 +158,6 @@ get(%KEY,response)
  n comma,data,error,exists,globalName,i,name,ref,start,stop,subscript,subscripts,value
  ;
  k response
- k ^rltkey m ^rltkey=%KEY
  i $g(%KEY("JSON"))'="" d
  . n json,name,no,props,value
  . s json=%KEY("JSON")
@@ -257,7 +255,6 @@ order(%KEY,response)
  n comma,data,direction,error,globalName,i,name,next,ref,refx,seedValue,start,stop,subscript,subscripts,value
  ;
  k response
- k ^rltkey m ^rltkey=%KEY
  i $g(%KEY("JSON"))'="" d
  . n json,name,no,props,value
  . s json=%KEY("JSON")
@@ -328,7 +325,6 @@ orderAll(%KEY,response)
  n comma,data,direction,error,globalName,i,name,next,ref,refx,seedValue,start,stop,subscript,subscripts,value
  ;
  k response
- k ^rltkey m ^rltkey=%KEY
  i $g(%KEY("JSON"))'="" d
  . n json,name,no,props,value
  . s json=%KEY("JSON")
@@ -550,10 +546,22 @@ mergeFromGlobal(%KEY,response)
  ;
 increment(%KEY,response)
  ;
- n comma,error,globalName,i,name,next,ref,start,stop,subscript,subscripts
+ n comma,delta,error,globalName,i,name,next,ref,start,stop,subscript,subscripts
  ;
  k response
+ i $g(%KEY("JSON"))'="" d
+ . n json,name,no,props,value
+ . s json=%KEY("JSON")
+ . i $e(json,1)="[",$e(json,$l(json))="]" s %KEY("JSON")="{Subscripts:"_json_"}"
+ . s error=$$parseJSON^%zewdJSON(%KEY("JSON"),.props,1)
+ . i error'="" s error=action_"Error~"_error q
+ . s %KEY("GlobalName")=$g(props("GlobalName"))
+ . f no=1:1 q:'$d(props("Subscripts",no))  d
+ . . s value=$g(props("Subscripts",no))
+ . . s %KEY("Subscript."_no_".Value")=value
+ ;
  s globalName=$g(%KEY("GlobalName"))
+ i globalName="" s globalName=$g(%KEY("Reference"))
  i globalName="" QUIT "missingGlobalName~GlobalName was not specified"
  s stop=0
  s name=$o(%KEY("Subscript."))
@@ -575,8 +583,11 @@ increment(%KEY,response)
  . . s ref=ref_comma_""""_subscripts(i)_""""
  . . s comma=","
  . s ref=ref_")"
- s ref="s next=$increment("_ref_")"
+ s delta=$g(%KEY("Delta")) i delta="" s delta=1
+ i $g(%KEY("Action"))="Decrement" s delta=-delta
+ s ref="s next=$increment("_ref_","_delta_")"
  x ref
+ i $g(%KEY("OutputFormat"))="JSON" s response(1)="{""value"":"_next_"}" QUIT ""
  s response(0)="<IncrementResult>"
  s response(1)="<NextValue>"_next_"</NextValue>"
  s response(2)="</IncrementResult>"
