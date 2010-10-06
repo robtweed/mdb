@@ -36,6 +36,7 @@ install
  ;k ^MDBAPI("mdbm")
  s ^MDBAPI("mdbm","BatchSet")="batchSet^MDBMumps"
  s ^MDBAPI("mdbm","Decrement")="increment^MDBMumps"
+ s ^MDBAPI("mdbm","Function")="function^MDBMumps"
  s ^MDBAPI("mdbm","Get")="get^MDBMumps"
  s ^MDBAPI("mdbm","GetJSON")="getJSON^MDBMumps"
  s ^MDBAPI("mdbm","GetVersion")="getVersion^MDBMumps"
@@ -66,7 +67,6 @@ setJSON(%KEY,response)
  ;
  k response
  ;
- k ^rltkey m ^rltkey=%KEY
  s error="No JSON input was supplied"
  i $g(%KEY("JSON"))'="" s error=$$parseJSON^%zewdJSON(%KEY("JSON"),.props,1)
  i error'="" s error=action_"Error~"_error q
@@ -592,5 +592,28 @@ increment(%KEY,response)
  s response(0)="<IncrementResult>"
  s response(1)="<NextValue>"_next_"</NextValue>"
  s response(2)="</IncrementResult>"
+ QUIT ""
+ ;
+function(%KEY,response)
+ ;
+ n func,functionName,json,paramList,result
+ ;
+ k response
+ s json=$g(%KEY("JSON"))
+ s paramList=""
+ i $e(json,1)="[",$e(json,$l(json))="]" s paramList=$e(json,2,$l(json)-1)
+ ;
+ i $g(%KEY("Reference"))="" QUIT "missingFunctionName~Reference (Function Name) was not specified"
+ s functionName=%KEY("Reference")
+ i $e(functionName,1,2)="##"!($e(functionName,1,2)="$$") d
+ . s func=functionName_"("
+ e  d
+ . s func="$$"_functionName_"("
+ s func="s result="_func_paramList_")"
+ d
+ . n (func,result)
+ . x func
+ s response(1)="{""value"":"""_result_"""}"
+ ;
  QUIT ""
  ;
