@@ -620,7 +620,7 @@ function(%KEY,response)
  ;
 transaction(%KEY,response)
  ;
- n error,globalName,i,json,ref,result,stop,subscripts
+ n error,globalName,i,json,props,ref,result,stop,subscripts
  ;
  k response
  i $g(%KEY("JSON"))="" QUIT "missingJSON~JSON transaction document was not specified"
