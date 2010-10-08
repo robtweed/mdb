@@ -48,6 +48,7 @@ install
  s ^MDBAPI("mdbm","OrderAll")="orderAll^MDBMumps"
  s ^MDBAPI("mdbm","Set")="set^MDBMumps"
  s ^MDBAPI("mdbm","SetJSON")="setJSON^MDBMumps"
+ s ^MDBAPI("mdbm","Transaction")="transaction^MDBMumps"
  QUIT
  ;
 getVersion(%KEY,response)
@@ -617,3 +618,50 @@ function(%KEY,response)
  ;
  QUIT ""
  ;
+transaction(%KEY,response)
+ ;
+ n error,globalName,i,json,ref,result,stop,subscripts
+ ;
+ k response
+ i $g(%KEY("JSON"))="" QUIT "missingJSON~JSON transaction document was not specified"
+ s json=%KEY("JSON")
+ s error=$$parseJSON^%zewdJSON(json,.props,1)
+ ;
+ s stop=0,error=""
+ f i=1:1 q:'$d(props(i))  d  q:stop
+ . s method=$g(props(i,"method"))
+ . i method="" s stop=1,error="Missing method in JSON transaction document at step "_i q
+ . i method="setJSON" d  q:stop
+ . . n json
+ . . m json=props(i,"json")
+ . . i '$d(json) s stop=1,error="Missing JSON document in JSON transaction document at step "_i q
+ . . s globalName=$g(props(i,"globalName"))
+ . . i globalName="" s stop=1,error="Missing Global name in JSON transaction document at step "_i q
+ . . i $e(globalName,1)'="^" s globalName="^"_globalName
+ . . s ref="m "_globalName
+ . . i $d(props(i,"subscripts")) d
+ . . . n comma,j
+ . . . s ref=ref_"(",comma=""
+ . . . f j=1:1 q:'$d(props(i,"subscripts",j))  d
+ . . . . s ref=ref_comma_""""_props(i,"subscripts",j)_"""",comma=","
+ . . . s ref=ref_")"
+ . . s ref=ref_"=json"
+ . . x ref
+ . i method="kill" d  q:stop
+ . . s globalName=$g(props(i,"globalName"))
+ . . i globalName="" s stop=1,error="Missing Global name in JSON transaction document at step "_i q
+ . . i $e(globalName,1)'="^" s globalName="^"_globalName
+ . . s ref="k "_globalName
+ . . i $d(props(i,"subscripts")) d
+ . . . n comma,j
+ . . . s ref=ref_"(",comma=""
+ . . . f j=1:1 q:'$d(props(i,"subscripts",j))  d
+ . . . . s ref=ref_comma_""""_props(i,"subscripts",j)_"""",comma=","
+ . . . s ref=ref_")"
+ . . x ref
+ ;
+ i stop QUIT "transactionError~"_error
+ s response(1)="{""ok"":true}"
+ QUIT ""
+ ;
+
