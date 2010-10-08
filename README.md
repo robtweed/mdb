@@ -19,7 +19,9 @@ You should have received a copy of the GNU Affero General Public License along w
 
 ## Installation
 
-This Free Open Source version of M/DB is designed for use with the GT.M database (http://fisglobal.com/Products/TechnologyPlatforms/GTM/index.htm).  It also requires the Apache Web Server to be configured with our m_apache gateway. See http://www.mgateway.com for details.
+This Free Open Source version of M/DB is designed for use with the GT.M database [http://fisglobal.com/Products/TechnologyPlatforms/GTM/index.htm](http://fisglobal.com/Products/TechnologyPlatforms/GTM/index.htm).  It also requires the Apache Web Server to be configured with our m_apache gateway. 
+
+See [http://www.mgateway.com/mdb.html]{http://www.mgateway.com/mdb.html) for full details about M/DB.
 
 - download the files MDB.m and MDBMumps.m, eg
 
