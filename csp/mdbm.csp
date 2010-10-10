@@ -1,0 +1,10 @@
+<script language="Cache" runat="server">
+  D csp^MDBMCache
+</script>
+<csp:CLASS SUPER="%CSP.Page">
+<script language="Cache" arguments="" method="OnPreHTTP" returntype="%Boolean" runat="server">
+   set %response.ContentType="application/json"
+   set %response.Expires=""
+   QUIT ""
+</script>
+
