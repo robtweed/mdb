@@ -23,13 +23,12 @@ MDB ; M/DB: Mumps Emulation of Amazon SimpleDB
  ; | along with this program.  If not, see <http://www.gnu.org/licenses/>.    |
  ; ----------------------------------------------------------------------------
  ;
- QUIT
  ;
 version()	
-	QUIT "36"
+	QUIT "37"
 	;
 buildDate()	
-	QUIT "01 October 2010"
+	QUIT "10 October 2010"
 	;
 indexLength()
  QUIT 180
@@ -486,8 +485,9 @@ query(keyId,domainName,queryExpression,maxNoOfItems,nextToken,itemList,requestId
  ;
  n context,name,error,startTime,stop,token,value,xvalue
  ;
- s context=1
- i $d(^zewd("config","MGWSI")) s context=0
+ i $zv["GT.M" d
+ . s context=1
+ . i $d(^zewd("config","MGWSI")) s context=0
  s requestId=$$init(.startTime)
  s keyId=$g(keyId)
  i keyId="" QUIT $$end(startTime,.boxUsage,"MissingParameter","keyId")
@@ -509,9 +509,10 @@ query(keyId,domainName,queryExpression,maxNoOfItems,nextToken,itemList,requestId
  . . s itemList(n)=^MDB(keyId,"queryResults","itemList",pos)
  . i pos'="" d
  . . s nextToken=itemList(n)
- . . s nextToken=$$B64^%ZMGWSIS(nextToken)
- . . ;If using Cache, change the line above to:
- . . ;s nextToken=$System.Encryption.Base64Encode(nextToken) ;
+ . . i $zv["GT.M" d
+ . . . s nextToken=$$B64^%ZMGWSIS(nextToken)
+ . . e  d
+ . . . s nextToken=$$b64Encode^MDBMCache(nextToken)
  . . s ^MDB(keyId,"queryResults","nextToken",nextToken)=pos
  . e  d
  . . k ^MDB(keyId,"queryResults")
@@ -532,9 +533,10 @@ query(keyId,domainName,queryExpression,maxNoOfItems,nextToken,itemList,requestId
  . . s itemList(n)=^MDB(keyId,"queryResults","itemList",pos)
  . i pos'="" d
  . . s nextToken=itemList(n)
- . . s nextToken=$$B64^%ZMGWSIS(nextToken,context)
- . . ;If using Cache, change the line above to:
- . . ;s nextToken=$System.Encryption.Base64Encode(nextToken) ;
+ . . i $zv["GT.M" d
+ . . . s nextToken=$$B64^%ZMGWSIS(nextToken,context)
+ . . e  d
+ . . . s nextToken=$$b64Encode^MDBMCache(nextToken)
  . . s ^MDB(keyId,"queryResults","nextToken",nextToken)=pos
  ;
  QUIT $$end(startTime,.boxUsage)
@@ -834,12 +836,13 @@ createResponse(action,requestId,boxUsage)
  n len,lineNo
  ;
  ;i $g(^zewd("trace"))=1 d trace^%zewdAPI($h_": Commencing createResponse")
- w "HTTP/1.0 200 OK"_$c(13,10)
- w "Date: "_$$inetDate^%zewdAPI($h)_" "_$tr($g(^MDBConfig("GMTOffset")),":","")_$c(13,10)
- i $g(%KEY("OutputFormat"))="JSON" d
- . w "Content-type: application/json"_$c(13,10)
- e  d
- . w "Content-type: text/xml"_$c(13,10)
+ i '$d(%KEY("isCSP")) d
+ . w "HTTP/1.0 200 OK"_$c(13,10)
+ . w "Date: "_$$inetDate^%zewdAPI($h)_" "_$tr($g(^MDBConfig("GMTOffset")),":","")_$c(13,10)
+ . i $g(%KEY("OutputFormat"))="JSON" d
+ . . w "Content-type: application/json"_$c(13,10)
+ . e  d
+ . . w "Content-type: text/xml"_$c(13,10)
  s lineNo=1
  i $g(%KEY("OutputFormat"))'="JSON" d
  . i $g(%KEY("db"))="mdb" d
@@ -1041,7 +1044,7 @@ createResponse(action,requestId,boxUsage)
  s len=0,lineNo=""
  f  s lineNo=$o(^CacheTempEWD($j,lineNo)) q:lineNo=""  d
  . s len=len+$l(^CacheTempEWD($j,lineNo))
- w "Content-length: "_len_$c(13,10,13,10) 
+ i '$d(%KEY("isCSP")) w "Content-length: "_len_$c(13,10,13,10) 
  s lineNo=""
  f  s lineNo=$o(^CacheTempEWD($j,lineNo)) q:lineNo=""  d
  . w ^CacheTempEWD($j,lineNo)
@@ -1094,6 +1097,7 @@ createResponseStringToSign(version)
  . f  s n=$o(%KEY(n)) q:n=""  d
  . . q:$e(n,1,3)="MGW"
  . . q:n="Signature"
+ . . q:n="isCSP"
  . . s nvpListlc($$zcvt^%zewdAPI(n,"l"))=n
  . . ;i $zv["GT.M" d
  . . ;. s nvpListlc($$zcvt^%zewdAPI(n,"l"))=n
@@ -1111,6 +1115,7 @@ createResponseStringToSign(version)
  . f  s name=$o(%KEY(name)) q:name=""  d
  . . q:$e(name,1,3)="MGW"
  . . q:name="Signature"
+ . . q:name="isCSP"
  . . s value=$$urlEscape(%KEY(name))
  . . s stringToSign=stringToSign_amp_name_"="_value
  . . s amp="&"
@@ -1120,6 +1125,7 @@ createResponseStringToSign(version)
  . i location["?" s location=$p(location,"?",1)
  . i location="" d
  . . s location="/scripts/mgwms32.dll"
+ . . i $d(%KEY("isCSP")) s location=$$baseUri^MDBMCache()
  . e  d
  . . i location["http://"!(location["https://") d
  . . . s location=$p(location,"://",2)
@@ -1142,7 +1148,10 @@ createToken(length)
 init(startTime)
  ;
  i $g(^zewd("trace")) d trace^%zewdAPI($h_": $$init")
- s startTime=$$ZTS^%ZMGWSIS(1)
+ i $zv["GT.M" d
+ . s startTime=$$ZTS^%ZMGWSIS(1)
+ e  d
+ . s startTime=$zts
  s startTime=(startTime*86400)+$p(startTime,",",2)
  QUIT $$createRequestId()
  ;
@@ -1163,7 +1172,10 @@ end(startTime,boxUsage,errorCode,parameter1,parameter2)
  n endTime,error
  ;
  i $g(^zewd("trace")) d trace^%zewdAPI($h_": $$end")
- s endTime=$$ZTS^%ZMGWSIS(1)
+ i $zv["GT.M" d
+ . s endTime=$$ZTS^%ZMGWSIS(1)
+ e  d
+ . s endTime=$zts
  s endTime=(endTime*86400)+$p(endTime,",",2)
  s boxUsage=endTime-startTime,boxUsage=$j(boxUsage,1,10)
  i $g(errorCode)="" QUIT ""
@@ -1175,15 +1187,17 @@ end(startTime,boxUsage,errorCode,parameter1,parameter2)
  ;
 getSignedString(string,secretKey,signatureMethod)
  ;
- n context
- s context=1
- i $d(^zewd("config","MGWSI")) s context=0
- i $$zcvt^%zewdAPI($g(signatureMethod),"l")="hmacsha256" QUIT $$HMACSHA256^%ZMGWSIS(string,secretKey,1,context)
- QUIT $$HMACSHA1^%ZMGWSIS(string,secretKey,1,context)
- ;If using Cache, change the line above to:
- ;new hash
- ;s hash=$System.Encryption.HMACSHA1(string,secretKey)
- ;QUIT $System.Encryption.Base64Encode(hash) ;
+ n context,hash,returnValue
+ ;
+ i $zv["GT.M" d  QUIT returnValue
+ . s context=1
+ . i $d(^zewd("config","MGWSI")) s context=0
+ . i $$zcvt^%zewdAPI($g(signatureMethod),"l")="hmacsha256" d
+ . . s returnValue=$$HMACSHA256^%ZMGWSIS(string,secretKey,1,context)
+ . e  d
+ . . s returnValue=$$HMACSHA1^%ZMGWSIS(string,secretKey,1,context)
+ ;
+ QUIT $$sign^MDBMCache(signatureMethod,string,secretKey)
  ;
 runQuery(keyId,domainName,queryExpression,nextToken,itemList)
  ;
@@ -1898,20 +1912,26 @@ initialisationResponse
 	QUIT
 	;
 decodeBase64(string)
- n context
- s context=1
- i $d(^zewd("config","MGWSI")) s context=0
- QUIT $$DB64^%ZMGWSIS(string,context)
- ;If using Cache, change the line above to:
- ;QUIT $System.Encryption.Base64Decode(string)
-	;
+ ;
+ n b64,context
+ ;
+ i $zv["GT.M" d  QUIT b64
+ . s context=1
+ . i $d(^zewd("config","MGWSI")) s context=0
+ . s b64=$$DB64^%ZMGWSIS(string,context)
+ ;
+ QUIT $$b64Decode^MDBMCache(string)
+ ;
 encodeBase64(string)
- n context
- s context=1
- i $d(^zewd("config","MGWSI")) s context=0
- QUIT $$B64^%ZMGWSIS(string,context)
- ;If using Cache, change the line above to:
- ;QUIT $System.Encryption.Base64Encode(string)
+ ;
+ n b64,context
+ ;
+ i $zv["GT.M" d  QUIT b64
+ . s context=1
+ . i $d(^zewd("config","MGWSI")) s context=0
+ . s b64=$$B64^%ZMGWSIS(string,context)
+ ;
+ QUIT $$b64Encode^MDBMCache(string)
  ;
 parseSelect(selectExpression,domainName,queryExpression,attributes,orderBy,limit)
  ;select Ranking,Keyword from books where Title = 'The Right Stuff'
@@ -2212,3 +2232,4 @@ escape(value)
  i value["<" s value=$$replaceAll^%zewdAPI(value,"<","&lt;")
  i value[">" s value=$$replaceAll^%zewdAPI(value,">","&gt;")
  QUIT value
+ ;

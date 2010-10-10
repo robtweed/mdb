@@ -26,10 +26,10 @@ MDBMumps ; M/DB:Mumps API methods
  QUIT
  ;
 version()	
- QUIT "5"
+ QUIT "6"
  ;
 buildDate()	
- QUIT "04 October 2010"
+ QUIT "10 October 2010"
  ;
  ;
 install
@@ -54,7 +54,7 @@ install
 getVersion(%KEY,response)
  d install
  i $g(%KEY("OutputFormat"))="JSON" d  QUIT ""
- . s response(1)="{""Name"":""M/DB:Mumps"",""Build"":"_$$version()_",""Date"":"""_$$buildDate()_"""}"
+ . s response(1)="{""Name"":""M/DB:Mumps"",""Build"":"_$$version()_",""Date"":"""_$$buildDate()_""",""Host"":"""_$zv_"""}"
  ;
  s response(0)="<GetVersionResult>"
  s response(1)="<Build>"_$$version()_"</Build>"
@@ -664,4 +664,3 @@ transaction(%KEY,response)
  s response(1)="{""ok"":true}"
  QUIT ""
  ;
-

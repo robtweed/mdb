@@ -1,0 +1,64 @@
+MDBMCache	; M/DB:Mumps - Cache-specific functions and procedures
+ ;
+ ; ----------------------------------------------------------------------------
+ ; | M/DB                                                                     |
+ ; | Copyright (c) 2004-9 M/Gateway Developments Ltd,                         |
+ ; | Reigate, Surrey UK.                                                      |
+ ; | All rights reserved.                                                     |
+ ; |                                                                          |
+ ; | http://www.mgateway.com                                                  |
+ ; | Email: rtweed@mgateway.com                                               |
+ ; |                                                                          |
+ ; | This program is free software: you can redistribute it and/or modify     |
+ ; | it under the terms of the GNU Affero General Public License as           |
+ ; | published by the Free Software Foundation, either version 3 of the       |
+ ; | License, or (at your option) any later version.                          |
+ ; |                                                                          |
+ ; | This program is distributed in the hope that it will be useful,          |
+ ; | but WITHOUT ANY WARRANTY; without even the implied warranty of           |
+ ; | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the            |
+ ; | GNU Affero General Public License for more details.                      |
+ ; |                                                                          |
+ ; | You should have received a copy of the GNU Affero General Public License |
+ ; | along with this program.  If not, see <http://www.gnu.org/licenses/>.    |
+ ; ----------------------------------------------------------------------------
+ ; 
+ QUIT
+ ;
+baseUri()
+ QUIT "/csp/ewd/mdbm.csp"
+ ;
+b64Encode(nextToken)
+ QUIT $System.Encryption.Base64Encode($g(nextToken))
+ ;
+b64Decode(string)
+ QUIT $System.Encryption.Base64Decode($g(string))
+ ;
+sign(signatureMethod,string,secretKey)
+ ;
+ n hash
+ ;
+ i $$zcvt^%zewdAPI($g(signatureMethod),"l")="hmacsha256" d
+ . s hash=$System.Encryption.HMACSHA256(string,secretKey)
+ e  d
+ . s hash=$System.Encryption.HMACSHA1(string,secretKey)
+ QUIT $System.Encryption.Base64Encode(hash) ;
+ ;
+csp ;
+ ;
+ n %CGIEVAR,%KEY,item,%zzx
+ ;
+ s %zzx=""
+ f  s %zzx=$o(%request.Data(%zzx)) q:%zzx=""  d
+ . i '$d(%request.Data(%zzx,2)) d  q
+ . . s %KEY(%zzx)=%request.Data(%zzx,1)
+ . s item=""
+ . f  s item=$o(%request.Data(%zzx,item)) q:item=""  d
+ . . s %KEY(%zzx,0,item)=%request.Data(%zzx,item)
+ s %KEY("isCSP")=1
+ m %CGIEVAR=%request.CgiEnvs
+ k item,%zzx
+ d response^MDB
+ ;
+ QUIT
+ ;
