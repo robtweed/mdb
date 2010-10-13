@@ -1,5 +1,5 @@
-Cache for Windows^INT^MDB Routines for Cache (WebLink and CSP)^~Format=Cache.S~
-%RO on 10 Oct 2010  11:59 PM
+Cache for Windows^INT^M/DB Routines for Cache (WebLink and CSP)^~Format=Cache.S~
+%RO on 13 Oct 2010   2:20 PM
 MDB^INT^1^62009,84673^0^1
 MDB ; M/DB: Mumps Emulation of Amazon SimpleDB
  ;
@@ -2339,7 +2339,7 @@ errors
  ;;NumberDomainsExceeded;Number of domains limit exceeded
  ;;***END*** 
 
-MDBMCache^INT^1^62009,82132^0^1
+MDBMCache^INT^1^62012,48861^0^1
 MDBMCache	; M/DB:Mumps - Cache-specific functions and procedures
  ;
  ; ----------------------------------------------------------------------------
@@ -2402,6 +2402,217 @@ csp ;
  k item,%zzx
  d response^MDB
  ;
+ QUIT
+ ;
+getGlobalList(list)
+ ;
+ n x
+ ;
+ s x=""
+ f  s x=$o(^$GLOBAL(x)) q:x=""  s list(x)=""
+ QUIT
+ ;
+
+MDBMClient^INT^1^61536,53565^0^1
+MDBMClient ; Cache Client Interface for M/DB:Mumps
+ ;
+access
+ n ip
+ s ip="192.168.1.110"
+ s ip="192.168.1.107"
+ s url="http://"_ip_"/mdb/request.mgwsi"
+ s AWSAccessKeyId="rob"
+ s AWSSecretKey="1234567"
+ s GMTOffset="+00:00"
+ QUIT
+ ;
+run(params,results)
+ n AWSAccessKeyId,AWSSecretKey,GMTOffset,url
+ d access
+ s docName=$$request(.params,AWSAccessKeyId,AWSSecretKey,url,2)
+ QUIT docName
+ ;
+request(params,AWSAccessKeyId,AWSSecretKey,url,signatureVersion)
+ ;
+ n action,boxUsage,docName,ec,em,nvpList,ok,requestId
+ ;
+ s signatureVersion=$g(signatureVersion) i signatureVersion="" s signatureVersion=2
+ s action=$g(params("Action"))
+ s docName=$$createHTTPRequest^SimpleDBClient(action,$g(AWSAccessKeyId),$g(AWSSecretKey),.params,$g(url),.em,.ec,.requestId,.boxUsage,signatureVersion,"2009-06-05")
+ QUIT docName
+  ;
+Tests ; ****************
+  ;
+version
+ n docName,params
+ s params("Action")="GetVersion"
+ s params("db")="mdbm"
+ s docName=$$run(.params)
+ d outputDOM^%zewdDOM(docName,1,2)
+ d removeDocument^%zewdDOM(docName)
+ QUIT
+ ;
+set
+ n docName,params
+ s params("Action")="Set"
+ s params("db")="mdbm"
+ s params("GlobalName")="MDBMumpsTest"
+ s params("Subscript.1.Value")="a1"
+ s params("Subscript.2.Value")="b1"
+ s params("Subscript.3.Value")="c1"
+ s params("DataValue")="hello!"
+ s docName=$$run(.params)
+ d outputDOM^%zewdDOM(docName,1,2)
+ d removeDocument^%zewdDOM(docName)
+ QUIT
+ ;
+set2
+ n docName,params
+ s params("Action")="Set"
+ s params("db")="mdbm"
+ ;s params("GlobalName")="MDBMumpsTest"
+ s params("Subscript.1.Value")="a1"
+ s params("Subscript.2.Value")="b1"
+ s params("Subscript.3.Value")="c2"
+ s params("DataValue")="world!"
+ s docName=$$run(.params)
+ d outputDOM^%zewdDOM(docName,1,2)
+ d removeDocument^%zewdDOM(docName)
+ QUIT
+ ;
+get
+ n docName,params
+ s params("Action")="Get"
+ s params("db")="mdbm"
+ s params("GlobalName")="MDBMumpsTest"
+ s params("Subscript.1.Value")="a1"
+ s params("Subscript.2.Value")="b1"
+ s params("Subscript.3.Value")="c1"
+ s docName=$$run(.params)
+ d outputDOM^%zewdDOM(docName,1,2)
+ d removeDocument^%zewdDOM(docName)
+ QUIT
+ ;
+kill
+ n docName,params
+ s params("Action")="Kill"
+ s params("db")="mdbm"
+ s params("GlobalName")="MDBMumpsTest"
+ s params("Subscript.1.Value")="a1"
+ s params("Subscript.2.Value")="b1"
+ s params("Subscript.3.Value")="c1"
+ s docName=$$run(.params)
+ d outputDOM^%zewdDOM(docName,1,2)
+ d removeDocument^%zewdDOM(docName)
+ QUIT
+ ;
+order
+ n docName,params
+ s params("Action")="Order"
+ s params("db")="mdbm"
+ s params("GlobalName")="MDBMumpsTest"
+ s params("Subscript.1.Value")="a1"
+ s params("Subscript.2.Value")="b1"
+ s params("SeedValue")=""
+ s docName=$$run(.params)
+ d outputDOM^%zewdDOM(docName,1,2)
+ d removeDocument^%zewdDOM(docName)
+ QUIT
+ ;
+order2
+ n docName,params
+ s params("Action")="Order"
+ s params("db")="mdbm"
+ s params("GlobalName")="MDBMumpsTest"
+ s params("Subscript.1.Value")="a1"
+ s params("Subscript.2.Value")="b1"
+ s params("SeedValue")="c1"
+ s docName=$$run(.params)
+ d outputDOM^%zewdDOM(docName,1,2)
+ d removeDocument^%zewdDOM(docName)
+ QUIT
+ ;
+order3
+ n docName,params
+ s params("Action")="Order"
+ s params("db")="mdbm"
+ s params("GlobalName")="MDBMumpsTest"
+ s params("Subscript.1.Value")="a1"
+ s params("Subscript.2.Value")="b1"
+ s params("SeedValue")="c2"
+ s params("Direction")="back"
+ s docName=$$run(.params)
+ d outputDOM^%zewdDOM(docName,1,2)
+ d removeDocument^%zewdDOM(docName)
+ QUIT
+ ;
+mergeToGlobal
+ n docName,params
+ s params("Action")="MergeToGlobal"
+ s params("db")="mdbm"
+ s params("GlobalName")="MDBMumpsTest"
+ s params("GlobalSubscript.1.Value")="a1"
+ s params("GlobalSubscript.2.Value")="b2"
+ s params("ArraySubscript.1.Name")="c4"
+ s params("ArraySubscript.1.Value")="100"
+ s params("ArraySubscript.2.Name")="c5"
+ s params("ArraySubscript.2.Value")="200"
+ s params("ArraySubscript.3.Name")="c6"
+ s params("ArraySubscript.3.Value")="300"
+ s params("ArraySubscript.4.Name")="c7"
+ s params("ArraySubscript.4.Value")="400"
+ s params("ArraySubscript.5.Name")="c7"
+ s params("ArraySubscript.4.Value")="400"
+ s docName=$$run(.params)
+ d outputDOM^%zewdDOM(docName,1,2)
+ d removeDocument^%zewdDOM(docName)
+ QUIT
+ ;
+batchSet
+ n docName,params
+ s params("Action")="BatchSet"
+ s params("db")="mdbm"
+ s params("Item.1.GlobalName")="MDBMumpsTest2"
+ s params("Item.1.Subscript.1.Value")="a1"
+ s params("Item.1.Subscript.2.Value")="b1"
+ s params("Item.1.Subscript.3.Value")="c1"
+ s params("Item.1.DataValue")="hello!"
+ s params("Item.2.GlobalName")="MDBMumpsTest2"
+ s params("Item.2.Subscript.1.Value")="a1"
+ s params("Item.2.Subscript.2.Value")="b2"
+ s params("Item.2.DataValue")="world!"
+ s params("Item.2.GlobalName")="MDBMumpsTest2"
+ s params("Item.2.Subscript.1.Value")="a1"
+ s params("Item.2.Subscript.2.Value")="b2"
+ s params("Item.2.Subscript.3.Value")="c2"
+ s params("Item.2.DataValue")="world 2!"
+ s docName=$$run(.params)
+ d outputDOM^%zewdDOM(docName,1,2)
+ d removeDocument^%zewdDOM(docName)
+ QUIT
+ ;
+mergeFromGlobal
+ n docName,params
+ s params("Action")="MergeFromGlobal"
+ s params("db")="mdbm"
+ s params("GlobalName")="MDBMumpsTest"
+ s params("Subscript.1.Value")="a1"
+ s params("Subscript.2.Value")="b1"
+ s docName=$$run(.params)
+ d outputDOM^%zewdDOM(docName,1,2)
+ d removeDocument^%zewdDOM(docName)
+ QUIT
+ ;
+increment
+ n docName,params
+ s params("Action")="Increment"
+ s params("db")="mdbm"
+ s params("GlobalName")="MDBMumpsTest"
+ s params("Subscript.1.Value")="a1"
+ s params("Subscript.2.Value")="b1"
+ s docName=$$run(.params)
+ d outputDOM^%zewdDOM(docName,1,2)
+ d removeDocument^%zewdDOM(docName)
  QUIT
  ;
 
@@ -2610,7 +2821,7 @@ createAttrList(listName,sessionName,sessid)
  QUIT ""
  ;
 
-MDBMumps^INT^1^62009,77174^0^1
+MDBMumps^INT^1^62012,48912^0^1
 MDBMumps ; M/DB:Mumps API methods
  ;
  ; ----------------------------------------------------------------------------
@@ -2639,10 +2850,10 @@ MDBMumps ; M/DB:Mumps API methods
  QUIT
  ;
 version()	
- QUIT "6"
+ QUIT "7"
  ;
 buildDate()	
- QUIT "10 October 2010"
+ QUIT "13 October 2010"
  ;
  ;
 install
@@ -2652,6 +2863,7 @@ install
  s ^MDBAPI("mdbm","Function")="function^MDBMumps"
  s ^MDBAPI("mdbm","Get")="get^MDBMumps"
  s ^MDBAPI("mdbm","GetJSON")="getJSON^MDBMumps"
+ s ^MDBAPI("mdbm","GetGlobals")="getGlobals^MDBMumps"
  s ^MDBAPI("mdbm","GetVersion")="getVersion^MDBMumps"
  s ^MDBAPI("mdbm","Increment")="increment^MDBMumps"
  s ^MDBAPI("mdbm","Kill")="kill^MDBMumps"
@@ -3275,6 +3487,25 @@ transaction(%KEY,response)
  ;
  i stop QUIT "transactionError~"_error
  s response(1)="{""ok"":true}"
+ QUIT ""
+ ;
+getGlobals(%KEY,response)
+ i $g(%KEY("OutputFormat"))="JSON" d  QUIT ""
+ . n comma,list,x
+ . i $zv["GT.M" d
+ . . s x="^%"
+ . . i $d(@x) s list(x)=""
+ . . f  s x=$order(@x) q:x=""  s list(x)=""
+ . . ;
+ . e  d
+ . . d getGlobalList^MDBMCache(.list)
+ . s response(1)="["
+ . s x="",comma=""
+ . f  s x=$o(list(x)) q:x=""  d
+ . . s response(1)=response(1)_comma_""""_$e(x,2,$l(x))_""""
+ . . s comma=","
+ . s response(1)=response(1)_"]"
+ ;
  QUIT ""
  ;
 

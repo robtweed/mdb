@@ -26,10 +26,10 @@ MDBMumps ; M/DB:Mumps API methods
  QUIT
  ;
 version()	
- QUIT "6"
+ QUIT "7"
  ;
 buildDate()	
- QUIT "10 October 2010"
+ QUIT "13 October 2010"
  ;
  ;
 install
@@ -39,6 +39,7 @@ install
  s ^MDBAPI("mdbm","Function")="function^MDBMumps"
  s ^MDBAPI("mdbm","Get")="get^MDBMumps"
  s ^MDBAPI("mdbm","GetJSON")="getJSON^MDBMumps"
+ s ^MDBAPI("mdbm","GetGlobals")="getGlobals^MDBMumps"
  s ^MDBAPI("mdbm","GetVersion")="getVersion^MDBMumps"
  s ^MDBAPI("mdbm","Increment")="increment^MDBMumps"
  s ^MDBAPI("mdbm","Kill")="kill^MDBMumps"
@@ -662,5 +663,24 @@ transaction(%KEY,response)
  ;
  i stop QUIT "transactionError~"_error
  s response(1)="{""ok"":true}"
+ QUIT ""
+ ;
+getGlobals(%KEY,response)
+ i $g(%KEY("OutputFormat"))="JSON" d  QUIT ""
+ . n comma,list,x
+ . i $zv["GT.M" d
+ . . s x="^%"
+ . . i $d(@x) s list(x)=""
+ . . f  s x=$order(@x) q:x=""  s list(x)=""
+ . . ;
+ . e  d
+ . . d getGlobalList^MDBMCache(.list)
+ . s response(1)="["
+ . s x="",comma=""
+ . f  s x=$o(list(x)) q:x=""  d
+ . . s response(1)=response(1)_comma_""""_$e(x,2,$l(x))_""""
+ . . s comma=","
+ . s response(1)=response(1)_"]"
+ ;
  QUIT ""
  ;

@@ -62,3 +62,11 @@ csp ;
  ;
  QUIT
  ;
+getGlobalList(list)
+ ;
+ n x
+ ;
+ s x=""
+ f  s x=$o(^$GLOBAL(x)) q:x=""  s list(x)=""
+ QUIT
+ ;
