@@ -1,7 +1,10 @@
-MDBMCache	; M/DB:Mumps - Cache-specific functions and procedures
+Cache for Windows^INT^M/Wire Daemon process for Cache^~Format=Cache.S~
+%RO on 20 Oct 2010  12:16 PM
+zmwireDaemon^INT^1^61781,53875^0^1
+zmwireDaemon ; M/Wire Protocol Daemon process for Cache
  ;
  ; ----------------------------------------------------------------------------
- ; | M/DB                                                                     |
+ ; | M/Wire                                                                   |
  ; | Copyright (c) 2004-9 M/Gateway Developments Ltd,                         |
  ; | Reigate, Surrey UK.                                                      |
  ; | All rights reserved.                                                     |
@@ -22,61 +25,47 @@ MDBMCache	; M/DB:Mumps - Cache-specific functions and procedures
  ; | You should have received a copy of the GNU Affero General Public License |
  ; | along with this program.  If not, see <http://www.gnu.org/licenses/>.    |
  ; ----------------------------------------------------------------------------
- ; 
- QUIT
- ;
-baseUri()
- QUIT "/csp/ewd/mdbm.csp"
- ;
-b64Encode(nextToken)
- QUIT $System.Encryption.Base64Encode($g(nextToken))
- ;
-b64Decode(string)
- QUIT $System.Encryption.Base64Decode($g(string))
- ;
-MD5(string)
- ;
- n hash
- ;
- s hash=$System.Encryption.MD5Hash(string)
- QUIT $System.Encryption.Base64Encode(hash)
- ;
-stripSpaces(string)
- QUIT $zstrip(string,"<>W")
- ;
-sign(signatureMethod,string,secretKey)
- ;
- n hash
- ;
- i $$zcvt^%zewdAPI($g(signatureMethod),"l")="hmacsha256" d
- . s hash=$System.Encryption.HMACSHA256(string,secretKey)
- e  d
- . s hash=$System.Encryption.HMACSHA1(string,secretKey)
- QUIT $System.Encryption.Base64Encode(hash) ;
- ;
-csp ;
- ;
- n %CGIEVAR,%KEY,item,%zzx
- ;
- s %zzx=""
- f  s %zzx=$o(%request.Data(%zzx)) q:%zzx=""  d
- . i '$d(%request.Data(%zzx,2)) d  q
- . . s %KEY(%zzx)=%request.Data(%zzx,1)
- . s item=""
- . f  s item=$o(%request.Data(%zzx,item)) q:item=""  d
- . . s %KEY(%zzx,0,item)=%request.Data(%zzx,item)
- s %KEY("isCSP")=1
- m %CGIEVAR=%request.CgiEnvs
- k item,%zzx
- d response^MDB
  ;
  QUIT
  ;
-getGlobalList(list)
+ ;  M/Wire Daemon for Cache
  ;
- n x
+ ;  Build 6 Beta
  ;
- s x=""
- f  s x=$o(^$GLOBAL(x)) q:x=""  s list(x)=""
+ ;  Start using:
+ ;
+ ;    job start^zmwireDaemon
+ ;
+ ;  You should now be able to connect M/Wire clients to port 6330
+ ;
+ ;  Use ^RESJOB to halt the daemon if required
+ ;
+ ;  Change the line below to modify the port number used by M/Wire
+ ;
+port
+ ;;6330
+ ;
+start
+ i $zv["GT.M" QUIT
+ n io,port,x
+ ;
+ l +^zmwire("daemon"):0 e  QUIT  ; already running
+ ;
+ s io="|TCP|1" 
+ s port=$p($t(port+1),";;",2) 
+ o io:(:port:"PTA"):20 e  QUIT
+ u io
+loop
+ r x
+ j child:(:5:io:io)
+ g loop
+ ;
+child
+ ;
+ u $io:(::"+Q":$c(10))
+ d command^zmwire
  QUIT
  ;
+
+
+
