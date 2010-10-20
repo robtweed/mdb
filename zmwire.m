@@ -152,6 +152,7 @@ loop
  i $e(input,1,9)="QUERYGET " d queryget($e(input,10,$l(input))) g loop
  i $e(input,1,14)="GETJSONSTRING " d getJSON($e(input,15,$l(input))) g loop
  i $e(input,1,14)="SETJSONSTRING " d setJSON($e(input,15,$l(input))) g loop
+ i $e(input,1,15)="RUNTRANSACTION " d runTransaction($e(input,16,$l(input))) g loop
  i $e(input,1,10)="MERGEFROM " d mergefrom($e(input,11,$l(input))) g loop
  i $e(input,1,11)="GETSUBTREE " d mergefrom($e(input,12,$l(input))) g loop
  i $e(input,1,8)="MERGETO " d mergeto($e(input,9,$l(input))) g loop
@@ -561,6 +562,54 @@ data(input)
  s $zt=""
  i $g(^zewd("trace"))=1 d trace^%zewdAPI("input="_input_"; data="_data)
  w ":"_data_$c(13,10)
+ QUIT
+ ;
+runTransaction(input)
+ ;
+ n error,globalName,i,json,props,ref,result,stop,subscripts
+ ;
+ s error=$$parseJSON^%zewdJSON(input,.props,1)
+ i error'="" w "-"_error_$c(13,10) QUIT
+ ;
+ s stop=0,error=""
+ f i=1:1 q:'$d(props(i))  d  q:stop
+ . s method=$g(props(i,"method"))
+ . i method="" s stop=1,error="Missing method in JSON transaction document at step "_i q
+ . i method="setJSON" d  q:stop
+ . . n json
+ . . m json=props(i,"json")
+ . . i '$d(json) s stop=1,error="Missing JSON document in JSON transaction document at step "_i q
+ . . s globalName=$g(props(i,"globalName"))
+ . . i globalName="" s globalName=$g(props(i,"GlobalName"))
+ . . i globalName="" s stop=1,error="Missing Global name in JSON transaction document at step "_i q
+ . . i $e(globalName,1)'="^" s globalName="^"_globalName
+ . . s ref="m "_globalName
+ . . i $d(props(i,"subscripts")) d
+ . . . n comma,j
+ . . . s ref=ref_"(",comma=""
+ . . . f j=1:1 q:'$d(props(i,"subscripts",j))  d
+ . . . . s ref=ref_comma_""""_props(i,"subscripts",j)_"""",comma=","
+ . . . s ref=ref_")"
+ . . s ref=ref_"=json"
+ . . x ref
+ . i method="kill" d  q:stop
+ . . s globalName=$g(props(i,"globalName"))
+ . . i globalName="" s globalName=$g(props(i,"GlobalName"))
+ . . i globalName="" s stop=1,error="Missing Global name in JSON transaction document at step "_i q
+ . . i $e(globalName,1)'="^" s globalName="^"_globalName
+ . . s ref="k "_globalName
+ . . i $d(props(i,"subscripts")) d
+ . . . n comma,j
+ . . . s ref=ref_"(",comma=""
+ . . . f j=1:1 q:'$d(props(i,"subscripts",j))  d
+ . . . . s ref=ref_comma_""""_props(i,"subscripts",j)_"""",comma=","
+ . . . s ref=ref_")"
+ . . x ref
+ ;
+ i error'="" w "-"_error_$c(13,10) QUIT
+ s response="+ok"_$c(13,10)
+ w response
+ i $g(^zewd("trace"))=1 d trace^%zewdAPI("transaction: response="_response)
  QUIT
  ;
 setJSON(input)
