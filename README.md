@@ -31,7 +31,9 @@ See [http://www.mgateway.com/mdb.html](http://www.mgateway.com/mdb.html) for ful
 
  The destination directory in which you'll find the files is determined by the path in which you ran the above command.
 	
-Then copy the files *MDB.m* and *MDBMumps.m* to your working GT.M directory (eg, on the M/DB Appliance, */usr/local/gtm/ewd*)
+Then copy all the files with a *.m* extension to your working GT.M directory (eg, on the M/DB Appliance, */usr/local/gtm/ewd*)
+
+If you are installing on a Cach&#233; system, import the contents of the file */lib/mdb.xml* using *$system.OBJ.Load(filepath)*.
 
 ## Background
 
