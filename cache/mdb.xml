@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Export generator="Cache" version="22" zv="Cache for Windows (x86-32) 2008.2.1 (Build 902)" ts="2010-10-20 15:22:39">
+<Export generator="Cache" version="22" zv="Cache for Windows (x86-32) 2008.2.1 (Build 902)" ts="2010-10-31 12:49:25">
 <Routine name="MDB" type="INT" languagemode="0" generated="1" timestamp="62009,84673"><![CDATA[
 MDB ; M/DB: Mumps Emulation of Amazon SimpleDB
  ;
@@ -3553,7 +3553,7 @@ getGlobals(%KEY,response)
 ]]></Routine>
 
 
-<Routine name="zmwire" type="INT" languagemode="0" generated="1" timestamp="62019,53897"><![CDATA[
+<Routine name="zmwire" type="INT" languagemode="0" generated="1" timestamp="62030,46116"><![CDATA[
 zmwire ; M/Wire Protocol for M Systems (eg GT.M, Cache)
  ;
  ; ----------------------------------------------------------------------------
@@ -3611,10 +3611,10 @@ zmwire ; M/Wire Protocol for M Systems (eg GT.M, Cache)
  ;    Stop the Daemon process using ^RESJOB and restart it.
  ;
 mwireVersion
- ;;Build 6 Beta
+ ;;Build 7
  ;
 mwireDate
- ;;15 October 2010
+ ;;27 October 2010
  ;
 version
  ;
@@ -3700,6 +3700,7 @@ loop
  i $e(input,1,10)="GETGLOBAL " d getGlobal($e(input,11,$l(input))) g loop
  i $e(input,1,11)="GETGLOBALS2" d getGlobals() g loop
  i $e(input,1,10)="GETGLOBALS" d getGlobalList() g loop
+ i $e(input,1,9)="MULTIGET " d multiGet($e(input,10,$l(input))) g loop
  i $e(input,1,11)="GETALLSUBS " d orderall($e(input,12,$l(input))) g loop
  i $e(input,1,14)="GETSUBSCRIPTS " d getAllSubscripts($e(input,15,$l(input))) g loop
  i $e(input,1,9)="REVORDER " d reverseorder($e(input,10,$l(input))) g loop
@@ -4076,6 +4077,60 @@ getGlobal(input)
  i $g(^zewd("trace"))=1 d trace^%zewdAPI("getGlobal: response="_response)
  QUIT
  ;
+multiGet(input)
+ ;
+ n comma,dataStatus,error,exists,globalName,i,json,props,ref,response,subs,value
+ ;
+ ; MULTIGET myglobal[
+ ;  {globalName:'xxx', subscripts:["x1","y1"]},
+ ;  {globalName:'xxx', subscripts:["x2",""]},
+ ;  {globalName:'xxx', subscripts:["x2","y2"]}
+ ;]
+ ;
+ ;
+ s error=$$parseJSON^%zewdJSON(input,.props,1)
+ i error'="" w "-"_error_$c(13,10) QUIT
+ ;
+ s stop=0,error="",json="[",comma=""
+ f i=1:1 q:'$d(props(i))  d
+ . s dataStatus=0,value="",error=""
+ . s globalName=$g(props(i,"globalName"))
+ . i globalName="" s globalName=$g(props(i,"GlobalName"))
+ . i globalName="" d
+ . . s error="globalName not defined"
+ . e  d
+ . . i $e(globalName,1)'="^" s globalName="^"_globalName
+ . . s ref="s exists=$d("_globalName
+ . . s subs=""
+ . . i $d(props(i,"subscripts")) d
+ . . . n comma,j,stop,sub
+ . . . s subs="(",comma="",stop=0
+ . . . f j=1:1 q:'$d(props(i,"subscripts",j))  d  q:stop
+ . . . . s sub=props(i,"subscripts",j)
+ . . . . i sub="" s error="Subscript "_j_" is null",stop=1 q
+ . . . . s subs=subs_comma_""""_props(i,"subscripts",j)_"""",comma=","
+ . . . i error="" s subs=subs_")"
+ . . i error="" d
+ . . . s ref=ref_subs_")"
+ . . . s $zt=$$zt()
+ . . . x ref
+ . . . s $zt=""
+ . . . i exists d
+ . . . . s ref="s value=$g("_globalName
+ . . . . s ref=ref_subs_")"
+ . . . . s $zt=$$zt()
+ . . . . x ref
+ . . . . s $zt=""
+ . s json=json_comma_"{""value"":"""_value_""",""dataStatus"":"_exists_",""error"":"""_error_"""}"
+ . s comma=","
+ s json=json_"]"
+ ;
+ s response="$"_$l(json)_$c(13,10)_json_$c(13,10)
+ ;
+ w response
+ i $g(^zewd("trace"))=1 d trace^%zewdAPI("multiGet: response="_response)
+ QUIT
+ ;
 kill(input)
  ;
  n i,glo,gloRef,nsp,p1,p2,x
@@ -4147,6 +4202,20 @@ runTransaction(input)
  . . . . s ref=ref_comma_""""_props(i,"subscripts",j)_"""",comma=","
  . . . s ref=ref_")"
  . . s ref=ref_"=json"
+ . . x ref
+ . i method="setGlobal" d  q:stop
+ . . n value
+ . . s globalName=$g(props(i,"globalName"))
+ . . i globalName="" s globalName=$g(props(i,"GlobalName"))
+ . . i globalName="" s stop=1,error="Missing Global name in JSON transaction document at step "_i q
+ . . i $e(globalName,1)'="^" s globalName="^"_globalName
+ . . s ref="s "_globalName
+ . . i $d(props(i,"subscripts")) d
+ . . . n comma,j
+ . . . s ref=ref_"(",comma=""
+ . . . f j=1:1 q:'$d(props(i,"subscripts",j))  d
+ . . . . s ref=ref_comma_""""_props(i,"subscripts",j)_"""",comma=","
+ . . . s ref=ref_")="""_$g(props(i,"value"))_""""
  . . x ref
  . i method="kill" d  q:stop
  . . s globalName=$g(props(i,"globalName"))
@@ -4226,8 +4295,11 @@ getJSON(input)
  i subs'="" s gloRef=gloRef_"("_subs_")"
  s ref="m arr="_gloRef
  x ref
- s json=$$arrayToJSON^%zewdJSON("arr")
- s response="$"_$l(json)_$c(13,10)_json_$c(13,10)
+ i '$d(arr) d
+ . s response="$-1"_$c(13,10)
+ e  d
+ . s json=$$arrayToJSON^%zewdJSON("arr")
+ . s response="$"_$l(json)_$c(13,10)_json_$c(13,10)
  i $g(^zewd("trace"))=1 d trace^%zewdAPI("getJSON: response="_response)
  ;
  w response
