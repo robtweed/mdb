@@ -55,7 +55,7 @@ zmwire ; M/Wire Protocol for M Systems (eg GT.M, Cache)
  ;    Stop the Daemon process using ^RESJOB and restart it.
  ;
 mwireVersion
- ;;Build 8
+ ;;Build 9
  ;
 mwireDate
  ;;07 November 2010
@@ -364,7 +364,7 @@ getGloRef(input)
  ;
 set(input)
  ;
- n data,gloName,gloRef,inputr,len,nb,nsp,ok,subs,x
+ n data,gloName,gloRef,inputr,json,len,nb,nsp,ok,subs,x
  ;
  ; SET myglobal["1","xx yy",3] 5
  ; hello
@@ -396,11 +396,10 @@ set(input)
  s x="s "_gloRef_"="""_data_""""
  s $zt=$$zt()
  x x
- ;s i=$increment(^robx)
- ;s ^robx(999)=999
  s $zt=""
- w "+ok"_crlf
- i $g(^zewd("trace"))=1 d trace^%zewdAPI("set: +ok sent")
+ s json="{""ok"":true}"
+ w "$"_$l(json)_crlf_json_crlf
+ i $g(^zewd("trace"))=1 d trace^%zewdAPI("set: ok:true sent")
  QUIT
  ;
 getGlobalList()
