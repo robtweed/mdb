@@ -4,6 +4,10 @@ M/DB is an Open Source clone of SimpleDB
 
 For convenience, this repository also includes the M/Wire back-end routines for GT.M and Cache.
 
+#Acknowledgements
+
+07 November 2010: Thanks to Richard Miller for identifying several performance issues in zmwire.m
+
 ## License
 
 Copyright (c) 2004-10 M/Gateway Developments Ltd,
