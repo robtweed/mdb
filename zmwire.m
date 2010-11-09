@@ -404,9 +404,8 @@ set(input)
  ;
 getGlobalList()
  ;
- n arrString,comma,count,crlf,glo,gloRef,list,response,x
+ n arrString,comma,count,glo,gloRef,list,response,x
  ;
- s crlf=crlf
  i $zv["GT.M" d
  . s x="^%"
  . i $d(@x) s list(x)=""
@@ -440,9 +439,8 @@ getGlobalList()
  ;
 getGlobals()
  ;
- n arrString,comma,count,crlf,glo,gloRef,list,response,x
+ n arrString,comma,count,glo,gloRef,list,response,x
  ;
- s crlf=crlf
  i $zv["GT.M" d
  . s x="^%"
  . i $d(@x) s list(x)=""
@@ -845,20 +843,17 @@ decrby(input)
  ;
 nextSubscript(input,direction)
  ;
- n crlf,data,gloRef,response,subscript,x,value
+ n data,gloRef,response,subscript,x,value
  ;
  ; NEXTSUBSCRIPT myglobal["1","xx yy",""]
  ; +abc
  ;
- s crlf=crlf
  s gloRef=$$getGloRef(input)
  i gloRef["^zmwire" w "-No access allowed to this global"_crlf QUIT
  s x="s subscript=$o("_gloRef_",direction)"
  s $zt=$$zt()
- d trace^%zewdAPI("x="_x)
  x x
  s $zt=""
- d trace^%zewdAPI("subscript="_subscript)
  s value="",data=0
  i subscript'="" d
  . s value=$g(^(subscript))
