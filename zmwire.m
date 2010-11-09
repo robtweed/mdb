@@ -55,10 +55,10 @@ zmwire ; M/Wire Protocol for M Systems (eg GT.M, Cache)
  ;    Stop the Daemon process using ^RESJOB and restart it.
  ;
 mwireVersion
- ;;Build 9
+ ;;Build 10
  ;
 mwireDate
- ;;07 November 2010
+ ;;09 November 2010
  ;
 version
  ;

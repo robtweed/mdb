@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Export generator="Cache" version="22" zv="Cache for Windows (x86-32) 2008.2.1 (Build 902)" ts="2010-11-07 14:03:41">
+<Export generator="Cache" version="22" zv="Cache for Windows (x86-32) 2008.2.1 (Build 902)" ts="2010-11-09 13:59:28">
 <Routine name="MDB" type="INT" languagemode="0" generated="1" timestamp="62009,84673"><![CDATA[
 MDB ; M/DB: Mumps Emulation of Amazon SimpleDB
  ;
@@ -3553,7 +3553,7 @@ getGlobals(%KEY,response)
 ]]></Routine>
 
 
-<Routine name="zmwire" type="INT" languagemode="0" generated="1" timestamp="62037,50592"><![CDATA[
+<Routine name="zmwire" type="INT" languagemode="0" generated="1" timestamp="62039,50364"><![CDATA[
 zmwire ; M/Wire Protocol for M Systems (eg GT.M, Cache)
  ;
  ; ----------------------------------------------------------------------------
@@ -3611,10 +3611,10 @@ zmwire ; M/Wire Protocol for M Systems (eg GT.M, Cache)
  ;    Stop the Daemon process using ^RESJOB and restart it.
  ;
 mwireVersion
- ;;Build 8
+ ;;Build 10
  ;
 mwireDate
- ;;07 November 2010
+ ;;09 November 2010
  ;
 version
  ;
@@ -3920,7 +3920,7 @@ getGloRef(input)
  ;
 set(input)
  ;
- n data,gloName,gloRef,inputr,len,nb,nsp,ok,subs,x
+ n data,gloName,gloRef,inputr,json,len,nb,nsp,ok,subs,x
  ;
  ; SET myglobal["1","xx yy",3] 5
  ; hello
@@ -3952,18 +3952,16 @@ set(input)
  s x="s "_gloRef_"="""_data_""""
  s $zt=$$zt()
  x x
- ;s i=$increment(^robx)
- ;s ^robx(999)=999
  s $zt=""
- w "+ok"_crlf
- i $g(^zewd("trace"))=1 d trace^%zewdAPI("set: +ok sent")
+ s json="{""ok"":true}"
+ w "$"_$l(json)_crlf_json_crlf
+ i $g(^zewd("trace"))=1 d trace^%zewdAPI("set: ok:true sent")
  QUIT
  ;
 getGlobalList()
  ;
- n arrString,comma,count,crlf,glo,gloRef,list,response,x
+ n arrString,comma,count,glo,gloRef,list,response,x
  ;
- s crlf=crlf
  i $zv["GT.M" d
  . s x="^%"
  . i $d(@x) s list(x)=""
@@ -3997,9 +3995,8 @@ getGlobalList()
  ;
 getGlobals()
  ;
- n arrString,comma,count,crlf,glo,gloRef,list,response,x
+ n arrString,comma,count,glo,gloRef,list,response,x
  ;
- s crlf=crlf
  i $zv["GT.M" d
  . s x="^%"
  . i $d(@x) s list(x)=""
@@ -4402,20 +4399,17 @@ decrby(input)
  ;
 nextSubscript(input,direction)
  ;
- n crlf,data,gloRef,response,subscript,x,value
+ n data,gloRef,response,subscript,x,value
  ;
  ; NEXTSUBSCRIPT myglobal["1","xx yy",""]
  ; +abc
  ;
- s crlf=crlf
  s gloRef=$$getGloRef(input)
  i gloRef["^zmwire" w "-No access allowed to this global"_crlf QUIT
  s x="s subscript=$o("_gloRef_",direction)"
  s $zt=$$zt()
- d trace^%zewdAPI("x="_x)
  x x
  s $zt=""
- d trace^%zewdAPI("subscript="_subscript)
  s value="",data=0
  i subscript'="" d
  . s value=$g(^(subscript))
