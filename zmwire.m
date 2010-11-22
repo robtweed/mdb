@@ -2,7 +2,7 @@ zmwire ; M/Wire Protocol for M Systems (eg GT.M, Cache)
  ;
  ; ----------------------------------------------------------------------------
  ; | M/Wire                                                                   |
- ; | Copyright (c) 2004-9 M/Gateway Developments Ltd,                         |
+ ; | Copyright (c) 2004-10 M/Gateway Developments Ltd,                         |
  ; | Reigate, Surrey UK.                                                      |
  ; | All rights reserved.                                                     |
  ; |                                                                          |
@@ -55,10 +55,10 @@ zmwire ; M/Wire Protocol for M Systems (eg GT.M, Cache)
  ;    Stop the Daemon process using ^RESJOB and restart it.
  ;
 mwireVersion
- ;;Build 10
+ ;;Build 11
  ;
 mwireDate
- ;;09 November 2010
+ ;;22 November 2010
  ;
 version
  ;
@@ -567,7 +567,7 @@ multiGet(input)
  ;
 kill(input)
  ;
- n i,glo,gloRef,nsp,p1,p2,x
+ n i,glo,gloRef,len,nsp,p1,p2,x
  ;
  ; KILL myglobal["1","xx yy",3]
  ; +OK
@@ -580,6 +580,9 @@ kill(input)
  . s p2=$p(glo,"[",2,2000)
  . s p2=$e(p2,1,$l(p2)-1)
  . s glo=p1_"("_p2_")"
+ . i glo["()" d
+ . . s len=$l(glo)
+ . . i $e(glo,len-1,len)="()" s glo=$e(glo,1,len-2)
  . i glo'["zmwire" s glo(glo)=""
  s glo=""
  f  s glo=$o(glo(glo)) q:glo=""  d
@@ -685,6 +688,10 @@ setJSON(input)
  s del=$p(inputr,flrc,1),del=$re(del)
  s inputr=$p(inputr,flrc,2,10000) ; in case it contains crlfs
  s json=$re(inputr)
+ i $zv["GT.M" d
+ . s json=$$unEscape(json)
+ e  d
+ . s json=$$unEscape^MDBMCache(json)
  ;
  i $e(gloRef,1)'="^" s gloRef="^"_gloRef
  i $e(gloRef,$l(gloRef))="]" s gloRef=$e(gloRef,1,$l(gloRef)-1)
@@ -702,10 +709,9 @@ setJSON(input)
  ;
  s ref=ref_"m "_gloRef_"=props"
  x ref
- s response="+ok"_crlf
- i $g(^zewd("trace"))=1 d trace^%zewdAPI("setJSON: response="_response)
- ;
+ s response="+OK"_crlf
  w response
+ i $g(^zewd("trace"))=1 d trace^%zewdAPI("setJSON: response="_response)
  ;
  QUIT
  ;
@@ -1361,6 +1367,46 @@ MD5(string)
  i $zv["Cache" QUIT $$MD5^MDBMCache(string)
  ;
  QUIT $$MD5^%ZMGWSIS(string,1,1)
+ ;
+unEscape(string)
+ ;
+ n buf,outstring,p1,p2,hex,asc
+ ;
+ s buf=string
+ s outstring=""
+ f  q:buf'["%"  d
+ . s p1=$p(buf,"%",1)
+ . s outstring=outstring_p1
+ . s p2=$p(buf,"%",2,50000)
+ . i $e(p2)="u" s buf=$e(p2,6,9999),hex=$e(p2,2,5),outstring=outstring_$c($$hex2Ascii(hex)-1264) q
+ . s hex=$e(p2,1,2)
+ . s buf=$e(p2,3,$l(p2))
+ . s asc=$$hex2Ascii(hex)
+ . s outstring=outstring_$c(asc)
+ QUIT (outstring_buf)
+ ;
+hex2Ascii(string)
+ ;
+ n asc,c,conv,err,i,n,power
+ ;
+ s string=$zconvert(string,"U")
+ s asc=0
+ f i=0:1:9 S conv(i)=i
+ s conv("A")=10
+ s conv("B")=11
+ s conv("C")=12
+ s conv("D")=13
+ s conv("E")=14
+ s conv("F")=15
+ s n=-1,err=0
+ f i=$l(string):-1:1 d  q:err
+ . s n=n+1
+ . s power=16**n
+ . s c=$e(string,i)
+ . i '$d(conv(c)) s err=1 q
+ . s asc=asc+(conv(c)*power)
+ i err QUIT "-1"
+ QUIT asc
  ;
 ts()
  s last=$g(^zmwire("lastts"))
