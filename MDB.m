@@ -2,7 +2,7 @@ MDB ; M/DB: Mumps Emulation of Amazon SimpleDB
  ;
  ; ----------------------------------------------------------------------------
  ; | M/DB                                                                     |
- ; | Copyright (c) 2004-9 M/Gateway Developments Ltd,                         |
+ ; | Copyright (c) 2004-11 M/Gateway Developments Ltd,                        |
  ; | Reigate, Surrey UK.                                                      |
  ; | All rights reserved.                                                     |
  ; |                                                                          |
@@ -25,10 +25,10 @@ MDB ; M/DB: Mumps Emulation of Amazon SimpleDB
  ;
  ;
 version()	
-	QUIT "37"
+	QUIT "38"
 	;
 buildDate()	
-	QUIT "10 October 2010"
+	QUIT "04 January 2011"
 	;
 indexLength()
  QUIT 180
@@ -571,8 +571,10 @@ response
  . i db="" s db="mdb" ;,%KEY("db")=db
  . s action=$g(%KEY("Action"))
  . i $g(^zewd("trace"))=1 d
+ . . n i
  . . d trace^%zewdAPI("MDB request processing for "_action_": started at "_$h_"; process: "_$j)
- . . k ^mdbKey m ^mdbKey=%KEY
+ . . s i=$increment(^mdbKey)
+ . . m ^mdbKey(i)=%KEY
  . i action="Initialise"!(action="initialise")!(action="Initialize")!(action="initialize") d  QUIT
  . . s %KEY("db")=db
  . . i $d(^MDBUAF("administrator")) d errorResponse("InvalidAction","M DB has already been initialised") q
@@ -1826,6 +1828,7 @@ urlDecode(string)
  ;
  n ascii,c,hex,pos
  ;
+ i string["%25" s string=$$replaceAll^%zewdAPI(string,"%25",$c(1))
  f  q:string'["%"  d
  . s pos=$f(string,"%")
  . s c=$e(string,pos) s c=$$zcvt^%zewdAPI(c,"l") i "0123456789abcdef"'[c s string=$$replace^%zewdAPI(string,"%",$c(1)) q
