@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Export generator="Cache" version="22" zv="Cache for Windows (x86-32) 2008.2.1 (Build 902)" ts="2010-11-22 13:11:12">
-<Routine name="MDB" type="INT" languagemode="0" generated="1" timestamp="62009,84673"><![CDATA[
+<Export generator="Cache" version="22" zv="Cache for Windows (x86-32) 2008.2.1 (Build 902)" ts="2011-04-21 12:43:22">
+<Routine name="MDB" type="INT" languagemode="0" generated="1" timestamp="62095,37622"><![CDATA[
 MDB ; M/DB: Mumps Emulation of Amazon SimpleDB
  ;
  ; ----------------------------------------------------------------------------
@@ -1825,6 +1825,7 @@ urlDecode(string)
  ;
  n ascii,c,hex,pos
  ;
+ i string["%25" s string=$$replaceAll^%zewdAPI(string,"%25",$c(1))
  f  q:string'["%"  d
  . s pos=$f(string,"%")
  . s c=$e(string,pos) s c=$$zcvt^%zewdAPI(c,"l") i "0123456789abcdef"'[c s string=$$replace^%zewdAPI(string,"%",$c(1)) q
@@ -2343,7 +2344,7 @@ errors
 ]]></Routine>
 
 
-<Routine name="MDBMCache" type="INT" languagemode="0" generated="1" timestamp="62052,45924"><![CDATA[
+<Routine name="MDBMCache" type="INT" languagemode="0" generated="1" timestamp="62095,33776"><![CDATA[
 MDBMCache	; M/DB:Mumps - Cache-specific functions and procedures
  ;
  ; ----------------------------------------------------------------------------
@@ -2451,6 +2452,16 @@ export
  . ;s list(rouName_".obj")=""
  do $system.OBJ.Export(.list,fileName)
  QUIT
+ ;
+hexStringToAscii(hex,b64)
+ n ascii,hx
+ s ascii=""
+ f  q:hex=""  d
+ . s hx=$e(hex,1,2),hex=$e(hex,3,$l(hex))
+ . s ascii=ascii_$c($zhex(hx))
+ i $g(b64)=1 s ascii=$system.Encryption.Base64Encode(ascii)
+ QUIT ascii
+ ;
 ]]></Routine>
 
 
@@ -3556,12 +3567,12 @@ getGlobals(%KEY,response)
 ]]></Routine>
 
 
-<Routine name="zmwire" type="INT" languagemode="0" generated="1" timestamp="62052,46583"><![CDATA[
+<Routine name="zmwire" type="INT" languagemode="0" generated="1" timestamp="62202,45406"><![CDATA[
 zmwire ; M/Wire Protocol for M Systems (eg GT.M, Cache)
  ;
  ; ----------------------------------------------------------------------------
  ; | M/Wire                                                                   |
- ; | Copyright (c) 2004-10 M/Gateway Developments Ltd,                         |
+ ; | Copyright (c) 2004-11 M/Gateway Developments Ltd,                        |
  ; | Reigate, Surrey UK.                                                      |
  ; | All rights reserved.                                                     |
  ; |                                                                          |
@@ -3614,42 +3625,44 @@ zmwire ; M/Wire Protocol for M Systems (eg GT.M, Cache)
  ;    Stop the Daemon process using ^RESJOB and restart it.
  ;
 mwireVersion
- ;;Build 11
+ ;;Build 12
  ;
 mwireDate
- ;;22 November 2010
+ ;;21 April 2011
  ;
 version
  ;
- w "+M/Wire "_$p($t(mwireVersion+1),";;",2,2000)_$c(13,10)
+ s output="+M/Wire "_$p($t(mwireVersion+1),";;",2,2000)_crlf
+ w output
  QUIT
  ;
 build
  ;
- n response
+ n crlf,response
  ;
- s response="*3"_$c(13,10)
+ s crlf=$c(13,10)
+ s response="*3"_crlf
  w response
  i $g(^zewd("trace"))=1 d trace^%zewdAPI("build: "_response_" sent")
  ;
  s response=$p($t(mwireVersion+1),";;",2,2000)
- s response="$"_$l(response)_$c(13,10)_response_$c(13,10)
+ s response="$"_$l(response)_crlf_response_crlf
  w response
  i $g(^zewd("trace"))=1 d trace^%zewdAPI("build: "_response_" sent")
  ;
  s response=$p($t(mwireDate+1),";;",2,2000)
- s response="$"_$l(response)_$c(13,10)_response_$c(13,10)
+ s response="$"_$l(response)_crlf_response_crlf
  w response
  i $g(^zewd("trace"))=1 d trace^%zewdAPI("build: "_response_" sent")
  ;
  s response=$zv
- s response="$"_$l(response)_$c(13,10)_response_$c(13,10)
+ s response="$"_$l(response)_crlf_response_crlf
  w response
  i $g(^zewd("trace"))=1 d trace^%zewdAPI("build: "_response_" sent")
  QUIT
  ;
 command ;
- n authNeeded,c,crlf,input
+ n authNeeded,c,crlf,input,output
  ;
  d cleardown
  i $zv["GT.M" s $zint="d monitoroutput"
@@ -3670,15 +3683,16 @@ loop
  . i input'="" d
  . . i $zv["GT.M" s input=$e(input,1,$l(input)-2)
  . . i $zv["Cache" s input=$e(input,1,$l(input)-1)
- i input="PING" w "+PONG"_crlf g loop
+ ;i input="PING" w "+PONG"_crlf g loop
+ i input="PING" s output="+PONG"_crlf w output g loop
  i $d(^zmwire("monitor","listener")) d log(input)
  i input="" g loop
  i input="EXIT" g halt
  i input="QUIT" g quit
  i input="HALT" g halt
  ;
- i authNeeded,$e(input,1,4)'="AUTH" w "-Authentication required"_$c(13,10) g loop
- i 'authNeeded,$e(input,1,4)="AUTH" w "-Authentication ignored"_$c(13,10) g loop
+ i authNeeded,$e(input,1,4)'="AUTH" s output="-Authentication required"_crlf w output g loop
+ i 'authNeeded,$e(input,1,4)="AUTH" s output="-Authentication ignored"_crlf w output g loop
  i $e(input,1,5)="AUTH " d auth($e(input,6,$l(input))) g loop
  i 'authNeeded!(role="admin"),$e(input,1,12)="SETPASSWORD " d setpassword($e(input,13,$l(input))) g loop
  ;
@@ -3728,7 +3742,7 @@ loop
  i $e(input,1,8)="MVERSION" d zv g loop
  i $e(input,1,4)="INFO" d info g loop
  i $e(input,1,7)="MONITOR" d monitor g loop
- w "-"_input_" not recognized",crlf
+ s output="-"_input_" not recognized"_crlf w output
  g loop
  ;
 multiBulkRequest()
@@ -3810,10 +3824,10 @@ monitor
  n quit
  ;
  s ^zmwire("monitor","listener",$j)=""
- w "+OK"_crlf
+ s output="+OK"_crlf w output
  f  h 1 r quit:0  i $e(quit,1,4)="QUIT" q
  k ^zmwire("monitor","listener",$j)
- w "+OK"_crlf
+ s output="+OK"_crlf w output
  QUIT
  ;
 log(input)
@@ -3869,7 +3883,8 @@ info
  . e  d
  . . s count=count+1
  s response=response_"connected_clients:"_count ;_crlf
- w "$"_$l(response)_crlf_response_crlf
+ s output="$"_$l(response)_crlf_response_crlf
+ w output
  QUIT
  ;
 auth(input)
@@ -3879,9 +3894,11 @@ auth(input)
  i $d(^zmwire("auth",pass)) d
  . s authNeeded=0
  . s role=^zmwire("auth",pass)
- . w "+OK"_crlf
+ . s output="+OK"_crlf
+ . w output
  e  d
- . w "-Invalid password"_crlf
+ . s output="-Invalid password"_crlf
+ . w output
  QUIT
  ;
 setpassword(input)
@@ -3894,18 +3911,19 @@ setpassword(input)
  ;
  n pass,newrole
  ;
- i $d(^zmwire("auth")),role'="admin" w "-Invalid command"_crlf QUIT
- i $$stripSpaces(input)="" w "-Invalid command"_crlf QUIT
+ i $d(^zmwire("auth")),role'="admin" s output="-Invalid command"_crlf w output QUIT
+ i $$stripSpaces(input)="" s output="-Invalid command"_crlf w output QUIT
  s newrole="user"
  i input[" " d
  . s newrole=$p(input," ",2)
  . s input=$p(input," ",1)
  i '$d(^zmwire("auth")) s newrole="admin"
- i newrole'="user",newrole'="admin" w "-Invalid role"_crlf QUIT
+ i newrole'="user",newrole'="admin" s output="-Invalid role"_crlf w output QUIT
  ;
  s pass=$$MD5(input)
  s ^zmwire("auth",pass)=newrole
- w "+OK"_crlf
+ s output="+OK"_crlf
+ w output
  QUIT
  ;
 getGloRef(input)
@@ -3937,7 +3955,7 @@ set(input)
  . s input=$p(input,crlf,1)
  s nsp=$l(input," ")
  s len=$p(input," ",nsp)
- i len'=0,+len=0 w "-Data length was not specified"_$c(13,10) QUIT
+ i len'=0,+len=0 s output="-Data length was not specified"_crlf w output QUIT
  s gloRef=$p(input," ",1,nsp-1)
  i $e(gloRef,1)'="^" s gloRef="^"_gloRef
  i $e(gloRef,$l(gloRef))="]" s gloRef=$e(gloRef,1,$l(gloRef)-1)
@@ -3945,7 +3963,7 @@ set(input)
  s nb=$l(gloRef,"[")+2
  s subs=$p(gloRef,"[",2,nb)
  s gloRef=gloName
- i gloRef["^zmwire" w "-No access allowed to this global"_$c(13,10) QUIT
+ i gloRef["^zmwire" s output="-No access allowed to this global"_crlf w output QUIT
  i subs'="" s gloRef=gloRef_"("_subs_")"
  i '$d(data)  d
  . s data=$$readChars(len)
@@ -3957,7 +3975,8 @@ set(input)
  x x
  s $zt=""
  s json="{""ok"":true}"
- w "$"_$l(json)_crlf_json_crlf
+ s output="$"_$l(json)_crlf_json_crlf
+ w output
  i $g(^zewd("trace"))=1 d trace^%zewdAPI("set: ok:true sent")
  QUIT
  ;
@@ -4030,12 +4049,12 @@ get(input)
  ; foobar
  ;
  s gloRef=$$getGloRef(input)
- i gloRef["^zmwire" w "-No access allowed to this global"_crlf QUIT
+ i gloRef["^zmwire" s output="-No access allowed to this global"_crlf w output QUIT
  s x="s exists=$d("_gloRef_")"
  s $zt=$$zt()
  x x
  s $zt=""
- i exists'=1,exists'=11 w "$-1"_crlf QUIT
+ i exists'=1,exists'=11 s output="$-1"_crlf w output QUIT
  s x="s data="_gloRef
  s $zt=$$zt()
  x x
@@ -4055,7 +4074,7 @@ getGlobal(input)
  ; foobar
  ;
  s gloRef=$$getGloRef(input)
- i gloRef["^zmwire" w "-No access allowed to this global"_crlf QUIT
+ i gloRef["^zmwire" s output="-No access allowed to this global"_crlf w output QUIT
  s x="s exists=$d("_gloRef_"),"
  ;x x
  s x=x_"data=$g("_gloRef_")"
@@ -4082,7 +4101,7 @@ multiGet(input)
  ;
  ;
  s error=$$parseJSON^%zewdJSON(input,.props,1)
- i error'="" w "-"_error_crlf QUIT
+ i error'="" s output="-"_error_crlf w output QUIT
  ;
  s stop=0,error="",json="[",comma=""
  f i=1:1 q:'$d(props(i))  d
@@ -4162,13 +4181,14 @@ data(input)
  ; :10
  ;
  s gloRef=$$getGloRef(input)
- i gloRef["^zmwire" w "-No access allowed to this global"_crlf QUIT
+ i gloRef["^zmwire" s output="-No access allowed to this global"_crlf w output QUIT
  s x="s data=$d("_gloRef_")"
  s $zt=$$zt()
  x x
  s $zt=""
  i $g(^zewd("trace"))=1 d trace^%zewdAPI("input="_input_"; data="_data)
- w ":"_data_crlf
+ s output=":"_data_crlf
+ w output
  QUIT
  ;
 runTransaction(input)
@@ -4176,7 +4196,7 @@ runTransaction(input)
  n error,globalName,i,json,props,ref,result,stop,subscripts
  ;
  s error=$$parseJSON^%zewdJSON(input,.props,1)
- i error'="" w "-"_error_crlf QUIT
+ i error'="" s output="-"_error_crlf w output QUIT
  ;
  s stop=0,error=""
  f i=1:1 q:'$d(props(i))  d  q:stop
@@ -4227,7 +4247,7 @@ runTransaction(input)
  . . . s ref=ref_")"
  . . x ref
  ;
- i error'="" w "-"_error_crlf QUIT
+ i error'="" s output="-"_error_crlf w output QUIT
  s response="+ok"_crlf
  w response
  i $g(^zewd("trace"))=1 d trace^%zewdAPI("transaction: response="_response)
@@ -4258,10 +4278,10 @@ setJSON(input)
  s nb=$l(gloRef,"[")+2
  s subs=$p(gloRef,"[",2,nb)
  s gloRef=gloName
- i gloRef["^zmwire" w "-No access allowed to this global"_crlf QUIT
+ i gloRef["^zmwire" s output="-No access allowed to this global"_crlf w output QUIT
  i subs'="" s gloRef=gloRef_"("_subs_")"
  s error=$$parseJSON^%zewdJSON(json,.props,1)
- i error'="" w "-Invalid JSON in setJSON: "_json_crlf QUIT
+ i error'="" s output="-Invalid JSON in setJSON: "_json_crlf w output QUIT
  ;
  s ref=""
  i del s ref="k "_gloRef_" "
@@ -4289,7 +4309,7 @@ getJSON(input)
  s nb=$l(gloRef,"[")+2
  s subs=$p(gloRef,"[",2,nb)
  s gloRef=gloName
- i gloRef["^zmwire" w "-No access allowed to this global"_crlf QUIT
+ i gloRef["^zmwire" s output="-No access allowed to this global"_crlf w output QUIT
  i subs'="" s gloRef=gloRef_"("_subs_")"
  s ref="m arr="_gloRef
  x ref
@@ -4312,12 +4332,13 @@ incr(input)
  ; :4
  ;
  s gloRef=$$getGloRef(input)
- i gloRef["^zmwire" w "-No access allowed to this global"_crlf QUIT
+ i gloRef["^zmwire" s output="-No access allowed to this global"_crlf w output QUIT
  s x="s data=$increment("_gloRef_")"
  s $zt=$$zt()
  x x
  s $zt=""
- w ":"_data_crlf
+ s output=":"_data_crlf
+ w output
  QUIT
  ;
 incrby(input)
@@ -4338,12 +4359,13 @@ incrby(input)
  s nb=$l(gloRef,"[")+2
  s subs=$p(gloRef,"[",2,nb)
  s gloRef=gloName
- i gloRef["^zmwire" w "-No access allowed to this global"_crlf QUIT
+ i gloRef["^zmwire" s output="-No access allowed to this global"_crlf w output QUIT
  i subs'="" s gloRef=gloRef_"("_subs_")"
  s x="s data=$increment("_gloRef_","_by_")"
  s $zt=$$zt() x x
  s $zt=""
- w ":"_data_crlf
+ s output=":"_data_crlf
+ w output
  QUIT
  ;
 function(input)
@@ -4361,7 +4383,8 @@ function(input)
  s $zt=$$zt()
  x x
  s $zt=""
- w "$"_$l(data)_crlf_data_crlf
+ s output="$"_$l(data)_crlf_data_crlf
+ w output
  QUIT
  ;
 decr(input)
@@ -4372,11 +4395,12 @@ decr(input)
  ; :3
  ;
  s gloRef=$$getGloRef(input)
- i gloRef["^zmwire" w "-No access allowed to this global"_crlf QUIT
+ i gloRef["^zmwire" s output="-No access allowed to this global"_crlf w output QUIT
  s x="s data=$increment("_gloRef_",-1)"
  s $zt=$$zt() x x
  s $zt=""
- w ":"_data_crlf
+ s output=":"_data_crlf
+ w output
  QUIT
  ;
 decrby(input)
@@ -4397,13 +4421,14 @@ decrby(input)
  s nb=$l(gloRef,"[")+2
  s subs=$p(gloRef,"[",2,nb)
  s gloRef=gloName
- i gloRef["^zmwire" w "-No access allowed to this global"_crlf QUIT
+ i gloRef["^zmwire" s output="-No access allowed to this global"_crlf w output QUIT
  i subs'="" s gloRef=gloRef_"("_subs_")"
  s x="s data=$increment("_gloRef_",-"_by_")"
  s $zt=$$zt()
  x x
  s $zt=""
- w ":"_data_crlf
+ s output=":"_data_crlf
+ w output
  QUIT
  ;
 nextSubscript(input,direction)
@@ -4414,7 +4439,7 @@ nextSubscript(input,direction)
  ; +abc
  ;
  s gloRef=$$getGloRef(input)
- i gloRef["^zmwire" w "-No access allowed to this global"_crlf QUIT
+ i gloRef["^zmwire" s output="-No access allowed to this global"_crlf w output QUIT
  s x="s subscript=$o("_gloRef_",direction)"
  s $zt=$$zt()
  x x
@@ -4442,13 +4467,14 @@ order(input)
  ; +abc
  ;
  s gloRef=$$getGloRef(input)
- i gloRef["^zmwire" w "-No access allowed to this global"_crlf QUIT
+ i gloRef["^zmwire" s output="-No access allowed to this global"_crlf w output QUIT
  s x="s data=$o("_gloRef_")"
  s $zt=$$zt()
  x x
  s $zt=""
- i data="" w "$-1"_crlf QUIT
- w "$"_$l(data)_crlf_data_crlf
+ i data="" s output="$-1"_crlf w output QUIT
+ s output="$"_$l(data)_crlf_data_crlf
+ w output
  QUIT
  ;
 reverseorder(input)
@@ -4459,13 +4485,14 @@ reverseorder(input)
  ; +abc
  ;
  s gloRef=$$getGloRef(input)
- i gloRef["^zmwire" w "-No access allowed to this global"_crlf QUIT
+ i gloRef["^zmwire" s output="-No access allowed to this global"_crlf w output QUIT
  s x="s data=$o("_gloRef_",-1)"
  s $zt=$$zt()
  x x
  s $zt=""
- i data="" w "$-1"_crlf QUIT
- w "$"_$l(data)_crlf_data_crlf
+ i data="" s output="$-1"_crlf w output QUIT
+ s output="$"_$l(data)_crlf_data_crlf
+ w output
  QUIT
  ;
 query(input)
@@ -4475,18 +4502,19 @@ query(input)
  ; QUERY myglobal["1","xx yy"]
  ;
  s gloRef=$$getGloRef(input)
- i gloRef["^zmwire" w "-No access allowed to this global"_crlf QUIT
+ i gloRef["^zmwire" s output="-No access allowed to this global"_crlf w output QUIT
  s x="s data=$q("_gloRef_")"
  s $zt=$$zt()
  x x
- i data="" w "$-1"_crlf QUIT
+ i data="" s output="$-1"_crlf w output QUIT
  s data=$e(data,2,$l(data))
  s p1=$p(data,"(",1)
  s nb=$p(data,"(")+2
  s p2=$p(data,"(",2,nb)
  s p2=$e(p2,1,$l(p2)-1)
  s data=p1_"["_p2_"]"
- w "$"_$l(data)_crlf_data_crlf
+ s output="$"_$l(data)_crlf_data_crlf
+ w output
  s $zt=""
  QUIT
  ;
@@ -4497,22 +4525,25 @@ queryget(input)
  ; QUERYGET myglobal["1","xx yy"]
  ;
  s gloRef=$$getGloRef(input)
- i gloRef["^zmwire" w "-No access allowed to this global"_crlf QUIT
+ i gloRef["^zmwire" s output="-No access allowed to this global"_crlf w output QUIT
  s x="s data=$q("_gloRef_")"
  s $zt=$$zt()
  x x
- i data="" w "$-1"_crlf QUIT
+ i data="" s output="$-1"_crlf w output QUIT
  s odata=data
- w "*2"_crlf
+ s output="*2"_crlf
+ w output
  s data=$e(data,2,$l(data))
  s p1=$p(data,"(",1)
  s nb=$p(data,"(")+2
  s p2=$p(data,"(",2,nb)
  s p2=$e(p2,1,$l(p2)-1)
  s data=p1_"["_p2_"]"
- w "$"_$l(data)_crlf_data_crlf
+ s output="$"_$l(data)_crlf_data_crlf
+ w output
  s value=@odata
- w "$"_$l(value)_crlf_value_crlf
+ s output="$"_$l(value)_crlf_value_crlf
+ w output
  s $zt=""
  QUIT
  ;
@@ -4535,7 +4566,7 @@ lock(input)
  i $e(gloRef,1)'="^" s gloRef="^"_gloRef
  i $e(gloRef,$l(gloRef))="]" s gloRef=$e(gloRef,1,$l(gloRef)-1)
  s gloName=$p(gloRef,"[",1)
- i gloRef["^zmwire" w "-No access allowed to this global"_crlf QUIT
+ i gloRef["^zmwire" s output="-No access allowed to this global"_crlf w output QUIT
  s nb=$l(gloRef,"[")+2
  s subs=$p(gloRef,"[",2,nb)
  s gloRef=gloName
@@ -4544,7 +4575,8 @@ lock(input)
  s $zt=$$zt()
  x x
  s $zt=""
- w ":"_ok_crlf
+ s output=":"_ok_crlf
+ w output
  QUIT
  ;
 unlock(input)
@@ -4555,12 +4587,13 @@ unlock(input)
  ; +OK
  ;
  s gloRef=$$getGloRef(input)
- i gloRef["^zmwire" w "-No access allowed to this global"_crlf QUIT
+ i gloRef["^zmwire" s output="-No access allowed to this global"_crlf w output QUIT
  s x="l -"_gloRef
  s $zt=$$zt()
  x x
  s $zt=""
- w "+OK"_crlf
+ s output="+OK"_crlf
+ w output
  QUIT
  ;
 getAllSubscripts(input)
@@ -4570,7 +4603,7 @@ getAllSubscripts(input)
  ; GETSUBSCRIPTS myglobal["1","xx yy"] 
  ; 
  s gloRef=$$getGloRef(input)
- i gloRef["^zmwire" w "-No access allowed to this global"_crlf QUIT
+ i gloRef["^zmwire" s output="-No access allowed to this global"_crlf w output QUIT
  i $e(gloRef,$l(gloRef))=")" d
  . s x="s exists=$d("_gloRef_")"
  . s gloRef=$e(gloRef,1,$l(gloRef)-1)_","
@@ -4580,7 +4613,7 @@ getAllSubscripts(input)
  s $zt=$$zt()
  x x
  s $zt=""
- i 'exists w "$-1"_crlf QUIT
+ i 'exists s output="$-1"_crlf w output QUIT
  ;
  s subs=""
  s subs1=subs i subs1["""" s subs1=$$replaceAll(subs1,"""","""""")
@@ -4627,7 +4660,7 @@ orderall(input)
  ; $-1
  ; 
  s gloRef=$$getGloRef(input)
- i gloRef["^zmwire" w "-No access allowed to this global"_crlf QUIT
+ i gloRef["^zmwire" s output="-No access allowed to this global"_crlf w output QUIT
  i $e(gloRef,$l(gloRef))=")" d
  . s x="s exists=$d("_gloRef_")"
  . s gloRef=$e(gloRef,1,$l(gloRef)-1)_","
@@ -4636,7 +4669,7 @@ orderall(input)
  . s gloRef=gloRef_"("
  s $zt=$$zt()
  x x
- i 'exists w "$-1"_crlf QUIT
+ i 'exists s output="$-1"_crlf w output QUIT
  ;
  s subs="",rec=0
  k ^CacheTempEWD($j)
@@ -4658,7 +4691,8 @@ orderall(input)
  . . s rec=rec+1
  . . s ^CacheTempEWD($j,rec)="$-1"_crlf
  s $zt=""
- w "*"_rec_crlf
+ s output="*"_rec_crlf
+ w output
  f i=1:1:rec w ^CacheTempEWD($j,i)
  k ^CacheTempEWD($j)
  QUIT
@@ -4683,38 +4717,49 @@ mergefrom(input)
  ; foo
  ;
  s gloRef=$$getGloRef(input)
- i gloRef["^zmwire" w "-No access allowed to this global"_crlf QUIT
+ i gloRef["^zmwire" s output="-No access allowed to this global"_crlf w output QUIT
  k ^CacheTempEWD($j)
  s x="m ^CacheTempEWD($j)="_gloRef
  s $zt=$$zt()
  x x
  s $zt=""
  s x=$q(^CacheTempEWD($j,""))
- i x="" w "*-1"_crlf k ^CacheTempEWD($j) QUIT
+ i x="" d  QUIT
+ . s output="*-1"_crlf 
+ . w output 
+ . k ^CacheTempEWD($j)
  f i=1:1 s x=$q(@x) q:x=""
  i $d(^CacheTempEWD($j))=1!($d(^CacheTempEWD($j))=11) s i=i+1
- w "*"_(i*2)_crlf
+ s output="*"_(i*2)_crlf
+ w output
  i $d(^CacheTempEWD($j))=1!($d(^CacheTempEWD($j))=11) d
- . w "$-1"_crlf
- . w "$"_$l(^CacheTempEWD($j))_crlf_^CacheTempEWD($j)_crlf
+ . s output="$-1"_crlf
+ . w output
+ . s output="$"_$l(^CacheTempEWD($j))_crlf_^CacheTempEWD($j)_crlf
+ . w output
  s x=$q(^CacheTempEWD($j,""))
  s start="^CacheTempEWD("_$j_","
  s params=$p(x,start,2,2000)
  s params=$e(params,1,$l(params)-1)
  s resp=params
- w "$"_$l(resp)_crlf_resp_crlf
+ s output="$"_$l(resp)_crlf_resp_crlf
+ w output
  s data=@x
- w "$"_$l(data)_crlf_data_crlf  
+ s output="$"_$l(data)_crlf_data_crlf  
+ w output
  f i=1:1 s x=$q(@x) q:x=""  d
  . s params=$p(x,start,2,2000)
  . s params=$e(params,1,$l(params)-1)
  . s resp=params
- . w "$"_$l(resp)_crlf_resp_crlf  
+ . s output="$"_$l(resp)_crlf_resp_crlf  
+ . w output
  . s data=@x
  . i data="" d
- . . w "$-1"_crlf
+ . . s output="$-1"_crlf
+ . . w output
  . e  d
- . . w "$"_$l(data)_crlf_data_crlf  
+ . . s output="$"_$l(data)_crlf_data_crlf  
+ . . w output
  k ^CacheTempEWD($j)
  QUIT
  ;
@@ -4741,15 +4786,15 @@ mergeto(input)
  ;
  s $zt=$$zt()
  s gloRef=$$getGloRef(input)
- i gloRef["^zmwire" w "-No access allowed to this global"_crlf QUIT
+ i gloRef["^zmwire" s output="-No access allowed to this global"_crlf w output QUIT
  i $e(gloRef,$l(gloRef))=")" s gloRef=$e(gloRef,1,$l(gloRef)-1)
  ;
  r noOfRecs
- i $e(noOfRecs,1)'="*" w "-Invalid: expected number of records"_crlf QUIT
+ i $e(noOfRecs,1)'="*" s output="-Invalid: expected number of records"_crlf w output QUIT
  s noOfRecs=+$e(noOfRecs,2,$l(noOfRecs))
- i noOfRecs'?1N.N w "-Invalid format for number of records"_crlf QUIT
+ i noOfRecs'?1N.N s output="-Invalid format for number of records"_crlf w output QUIT
  i noOfRecs=0 QUIT "+OK"_crlf QUIT
- i (noOfRecs#2)=1 w "-Invalid: no of records must be an even number"_crlf QUIT
+ i (noOfRecs#2)=1 s output="-Invalid: no of records must be an even number"_crlf w output QUIT
  s noOfRecs=noOfRecs/2
  k ^CacheTempEWD($j)
  s error=""
@@ -4794,12 +4839,13 @@ mergeto(input)
  . . . s gloRef1=gloRef1_","
  . . s x="s "_gloRef1_key_")="""_data_""""
  . s ^CacheTempEWD($j,i)=x
- i error'="" w "-"_error_crlf QUIT
+ i error'="" s output="-"_error_crlf w output QUIT
  f i=1:1:noOfRecs d
  . s x=^CacheTempEWD($j,i)
  . x x
  k ^CacheTempEWD($j)
- w "+OK"_crlf
+ s output="+OK"_crlf
+ w output
  s $zt=""
  QUIT
  ;
@@ -4809,34 +4855,40 @@ mdate
  ;
  s date=$h
  s day=+date
- w "*2"_crlf_"$"_$l(day)_crlf_day_crlf
+ s output="*2"_crlf_"$"_$l(day)_crlf_day_crlf
+ w output
  s time=$p(date,",",2)
- w "$"_$l(time)_crlf_time_crlf
+ s output="$"_$l(time)_crlf_time_crlf
+ w output
  QUIT
  ;
 tstart
  s $zt=$$zt()
  TSTART
- w "+OK"_crlf
+ s output="+OK"_crlf
+ w output
  s $zt=""
  QUIT
  ;
 tcommit
  s $zt=$$zt()
  TCOMMIT
- w "+OK"_crlf
+ s output="+OK"_crlf
+ w output
  s $zt=""
  QUIT
  ;
 trollback
  s $zt=$$zt()
  TROLLBACK
- w "+OK"_crlf
+ s output="+OK"_crlf
+ w output
  s $zt=""
  QUIT
  ;
 zv
- w "+"_$zv_crlf
+ s output="+"_$zv_crlf
+ w output
  QUIT
  ;
 zt()
@@ -4844,15 +4896,18 @@ zt()
  QUIT "executeError^zmwire"
  ;
 processid
- w ":"_$j_crlf
+ s output=":"_$j_crlf
+ w output
  QUIT
  ;
 ping
- w "+PONG"_crlf
+ s output="+PONG"_crlf
+ w output
  QUIT
  ;
 executeError
- w "-Invalid Command"_crlf
+ s output="-Invalid Command"_crlf
+ w output
  g loop
  ;
 replaceAll(InText,FromStr,ToStr) ; Replace all occurrences of a substring
