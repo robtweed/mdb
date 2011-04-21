@@ -55,7 +55,7 @@ zmwire ; M/Wire Protocol for M Systems (eg GT.M, Cache)
  ;    Stop the Daemon process using ^RESJOB and restart it.
  ;
 mwireVersion
- ;;Build 12
+ ;;Build 13
  ;
 mwireDate
  ;;21 April 2011
@@ -103,6 +103,7 @@ command ;
  s role="user"
  i $d(^zmwire("auth")) s authNeeded=1
 loop
+ i $g(^zmwire("relink"))=1,'$d(^zmwire("relink","process",$j)) s ok=$$relinkRoutines()
  r *c
  i $c(c)="*" d
  . s input=$$multiBulkRequest()
@@ -1465,3 +1466,30 @@ ts()
  s ^zmwire("lastts")=resp
  QUIT ((resp-last)/1000000000)
  ;
+relinkRoutines()
+ n list,rou,xrou
+ i $g(^zewd("trace"))=1 d trace^%zewdAPI("Process "_$j_": Relinking...")
+ s rou=""
+ f  s rou=$view("RTNNEXT",rou) q:rou=""  d
+ . i rou="zmwire" q
+ . i rou="%zewdGTMRuntime" q
+ . i rou="%zewdPHP" q
+ . i rou="MDB" q
+ . i rou="ewdWLewdmgrrelink" q
+ . i rou="%ZMGWSI" q
+ . i rou="%ZMGWSIS" q
+ . i rou="GTM$DMOD" q
+ . s xrou=rou
+ . i $e(xrou,1)="%" s xrou="_"_$e(xrou,2,$l(xrou))
+ . zl xrou
+ . i $g(^zewd("trace"))=1 d trace^%zewdAPI("relinked "_rou)
+ s ^zmwire("relink","process",$j)=""
+ i $g(^zewd("trace"))=1 d trace^%zewdAPI("Process "_$j_": Relinking complete")
+ QUIT ""
+ ;
+relink ;
+ s ^zmwire("relink")=1
+ k ^zmwire("relink","process")
+ QUIT
+ ;
+
