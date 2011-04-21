@@ -25,10 +25,10 @@ MDB ; M/DB: Mumps Emulation of Amazon SimpleDB
  ;
  ;
 version()	
-	QUIT "38"
+	QUIT "39"
 	;
 buildDate()	
-	QUIT "04 January 2011"
+	QUIT "21 April 2011"
 	;
 indexLength()
  QUIT 180
@@ -1829,6 +1829,7 @@ urlDecode(string)
  n ascii,c,hex,pos
  ;
  i string["%25" s string=$$replaceAll^%zewdAPI(string,"%25",$c(1))
+ i string["+" s string=$$replaceAll^%zewdAPI(string,"+","%20")
  f  q:string'["%"  d
  . s pos=$f(string,"%")
  . s c=$e(string,pos) s c=$$zcvt^%zewdAPI(c,"l") i "0123456789abcdef"'[c s string=$$replace^%zewdAPI(string,"%",$c(1)) q
@@ -1943,10 +1944,11 @@ parseSelect(selectExpression,domainName,queryExpression,attributes,orderBy,limit
  ;
  s error=""
  s limit=""
- s selectExpression=$$convertSubstringToLowerCase(selectExpression,"select")
+ s selectExpression=$$convertSubstringToLowerCase(selectExpression,"select ")
+ s selectExpression=$$convertSubstringToLowerCase(selectExpression," and ")
  i selectExpression=$$stripSpaces^%zewdAPI(selectExpression)
  i $e(selectExpression,1,7)'="select " QUIT $$invalid(1)
- s selectExpression=$$convertSubstringToLowerCase(selectExpression,"from")
+ s selectExpression=$$convertSubstringToLowerCase(selectExpression," from ")
  i selectExpression'[" from " QUIT $$invalid(3)
  s selectExpression=$$convertSubstringToLowerCase(selectExpression,"count(*)")
  s p1=$p(selectExpression,"select",2)
@@ -1971,7 +1973,7 @@ parseSelect(selectExpression,domainName,queryExpression,attributes,orderBy,limit
  s domainName=$p(domainName," ",1)
  i domainName="" QUIT $$invalid(4)
  s selectExpression=$p(selectExpression,domainName,2,5000)
- s selectExpression=$$convertSubstringToLowerCase(selectExpression,"where")
+ s selectExpression=$$convertSubstringToLowerCase(selectExpression," where ")
  s selectExpression=$$stripSpaces^%zewdAPI(selectExpression)
  s selectExpression=$$convertSubstringToLowerCase(selectExpression,"order by")
  s orderBy=""
@@ -1979,7 +1981,7 @@ parseSelect(selectExpression,domainName,queryExpression,attributes,orderBy,limit
  . n attrName,dir
  . s orderBy=$p(selectExpression,"order by",2)
  . s orderBy=$$stripSpaces^%zewdAPI(orderBy)
- . s orderBy=$$convertSubstringToLowerCase(orderBy,"limit")
+ . s orderBy=$$convertSubstringToLowerCase(orderBy," limit ")
  . i orderBy[" limit " d
  . . s limit=$p(orderBy," limit ",2)
  . . s orderBy=$p(orderBy," limit ",1)
@@ -1988,7 +1990,7 @@ parseSelect(selectExpression,domainName,queryExpression,attributes,orderBy,limit
  . i dir="" s dir="asc"
  . s orderBy="'"_attrName_"' "_dir
  . s selectExpression=$p(selectExpression,"order by",1)
- s selectExpression=$$convertSubstringToLowerCase(selectExpression,"limit")
+ s selectExpression=$$convertSubstringToLowerCase(selectExpression," limit ")
  i limit="",selectExpression["limit " d
  . s limit=$p(selectExpression,"limit ",2)
  . s selectExpression=$p(selectExpression,"limit ",1)
