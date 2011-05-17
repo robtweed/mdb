@@ -25,10 +25,10 @@ MDB ; M/DB: Mumps Emulation of Amazon SimpleDB
  ;
  ;
 version()	
-	QUIT "39"
+	QUIT "40"
 	;
 buildDate()	
-	QUIT "21 April 2011"
+	QUIT "17 May 2011"
 	;
 indexLength()
  QUIT 180
@@ -619,6 +619,7 @@ response
  . ;
  . ; Security OK
  . ;
+ . ;d trace^%zewdAPI("security ok: db="_db)
  . i $g(^MDBAPI(db,action))'="" d  QUIT
  . . ; Custom extension gateway.  Method should return output in response(lineNo)
  . . ; any error should be returned as errorCode~errorText
@@ -671,6 +672,7 @@ response
  . . d createResponse(action,requestId,boxUsage) QUIT
  . ;
  . i action="ListDomains" d  QUIT
+ . . ;d trace^%zewdAPI("in ListDomains")
  . . n domainList,maxNoOfDomains,nextToken,resp
  . . s maxNoOfDomains=$g(%KEY("MaxNumberOfDomains"))
  . . s nextToken=$g(%KEY("NextToken"))
@@ -2237,4 +2239,56 @@ escape(value)
  i value["<" s value=$$replaceAll^%zewdAPI(value,"<","&lt;")
  i value[">" s value=$$replaceAll^%zewdAPI(value,">","&gt;")
  QUIT value
+ ;
+externalSelect(keyId,selectExpression) ;
+ ;
+ n attributes,count,domainName,error,itemList,itemsAndAttrs,json,pos
+ ;
+ i $g(^zewd("trace"))=1 d trace^%zewdAPI("in externalSelect - keyId = "_keyId_": select="_selectExpression)
+ s error=$$runSelect(keyId,selectExpression,.itemList,.attributes,.domainName)
+ i error'="" d  QUIT json
+ . s json="{""error"":{""errorCode"":"""_$p(error,"~",1)_""",""errorMessage"":"""_$p(error,"~",2)_"""}}"
+ i $g(attributes)="count(*)" d
+ . n count,pos
+ . s itemsAndAttrs(1,"i")="Domain"
+ . s itemsAndAttrs(1,"a",1,"n")="Count"
+ . s pos="",count=0
+ . f  s pos=$o(itemList(pos)) q:pos=""  s count=count+1
+ . s itemsAndAttrs(1,"a",1,"v",1)=count
+ e  d
+ . n attribs,attribArray,ex,itemName,no,rx,bx,val,vno
+ . s pos=""
+ . f  s pos=$o(itemList(pos)) q:pos=""  d
+ . . s itemName=itemList(pos)
+ . . k attribs,attribArray
+ . . m attribs=attributes
+ . . s ex=$$getAttributes(keyId,domainName,itemName,.attribs,.rx,.bx,1)
+ . . s no=""
+ . . f  s no=$o(attribs(no)) q:no=""  d
+ . . . s attribArray(no,"n")=$g(attribs(no))
+ . . . s vno=""
+ . . . f  s vno=$o(attribs(no,"value",vno)) q:vno=""  d
+ . . . . s val=attribs(no,"value",vno)
+ . . . . s val=$$replaceAll^%zewdAPI(val,"""","\""")
+ . . . . s val=$$replaceAll^%zewdAPI(val,"\","\\")
+ . . . . s attribArray(no,"v",vno)=val
+ . . m itemsAndAttrs(pos,"a")=attribArray
+ . . s itemsAndAttrs(pos,"i")=itemName
+ s pos="",count=0
+ f  s pos=$o(itemsAndAttrs(pos)) q:pos=""  s count=count+1
+ i count=1 d
+ . n array
+ . m array=itemsAndAttrs(1)
+ . s json=$$arrayToJSON^zmwire("array")
+ . s json="["_json_"]"
+ e  d
+ . s json=$$arrayToJSON^zmwire("itemsAndAttrs")
+ i $g(^zewd("trace"))=1 d trace^%zewdAPI("json="_json)
+ QUIT json
+ ;
+test
+ s select="select * from testing where attr3 = 'control'"
+ s key="rob"
+ s ok=$$externalSelect^MDB(key,select)
+ QUIT
  ;

@@ -55,10 +55,10 @@ zmwire ; M/Wire Protocol for M Systems (eg GT.M, Cache)
  ;    Stop the Daemon process using ^RESJOB and restart it.
  ;
 mwireVersion
- ;;Build 13
+ ;;Build 15
  ;
 mwireDate
- ;;21 April 2011
+ ;;03 May 2011
  ;
 version
  ;
@@ -73,22 +73,22 @@ build
  s crlf=$c(13,10)
  s response="*3"_crlf
  w response
- i $g(^zewd("trace"))=1 d trace^%zewdAPI("build: "_response_" sent")
+ i $g(^zewd("trace"))=1 d trace("build: "_response_" sent")
  ;
  s response=$p($t(mwireVersion+1),";;",2,2000)
  s response="$"_$l(response)_crlf_response_crlf
  w response
- i $g(^zewd("trace"))=1 d trace^%zewdAPI("build: "_response_" sent")
+ i $g(^zewd("trace"))=1 d trace("build: "_response_" sent")
  ;
  s response=$p($t(mwireDate+1),";;",2,2000)
  s response="$"_$l(response)_crlf_response_crlf
  w response
- i $g(^zewd("trace"))=1 d trace^%zewdAPI("build: "_response_" sent")
+ i $g(^zewd("trace"))=1 d trace("build: "_response_" sent")
  ;
  s response=$zv
  s response="$"_$l(response)_crlf_response_crlf
  w response
- i $g(^zewd("trace"))=1 d trace^%zewdAPI("build: "_response_" sent")
+ i $g(^zewd("trace"))=1 d trace("build: "_response_" sent")
  QUIT
  ;
 command ;
@@ -107,10 +107,10 @@ loop
  r *c
  i $c(c)="*" d
  . s input=$$multiBulkRequest()
- . i $g(^zewd("trace"))=1 d trace^%zewdAPI($j_": "_$h_": mwire input: "_input)
+ . i $g(^zewd("trace"))=1 d trace($j_": "_$h_": mwire input: "_input)
  e  d
  . r input s input=$c(c)_input 
- . i $g(^zewd("trace"))=1 d trace^%zewdAPI($h_": mwire input: "_input)
+ . i $g(^zewd("trace"))=1 d trace($h_": mwire input: "_input)
  . i input'="" d
  . . i $zv["GT.M" s input=$e(input,1,$l(input)-2)
  . . i $zv["Cache" s input=$e(input,1,$l(input)-1)
@@ -195,9 +195,13 @@ multiBulkRequest()
  . . s len=len_$c(c)
  . r *c
  . s input=""
- . i len>0 r input#len
- . s param(i)=input
- . r *c,*c
+ . i len=0 d
+ . . s param(i)=""
+ . . r *c
+ . e  d
+ . . r input#len
+ . . s param(i)=input
+ . . r *c,*c
  ;
  s param(1)=$zconvert(param(1),"U")
  ;QUIT "PING"
@@ -401,6 +405,7 @@ set(input)
  . r ok 
  . i $d(^zmwire("monitor","listener")) d log(data)
  i data["""" s data=$$replaceAll(data,"""","""""")
+ i data="zmwire_null_value" s data=""
  s x="s "_gloRef_"="""_data_""""
  s $zt=$$zt()
  x x
@@ -408,7 +413,7 @@ set(input)
  s json="{""ok"":true}"
  s output="$"_$l(json)_crlf_json_crlf
  w output
- i $g(^zewd("trace"))=1 d trace^%zewdAPI("set: ok:true sent")
+ i $g(^zewd("trace"))=1 d trace("set: ok:true sent")
  QUIT
  ;
 getGlobalList()
@@ -427,13 +432,13 @@ getGlobalList()
  ;f  s glo=$o(list(glo)) q:glo=""  s count=count+1
  ;s response="*"_count_crlf
  ;w response
- ;i $g(^zewd("trace"))=1 d trace^%zewdAPI("getGlobalList: "_response_" sent") 
+ ;i $g(^zewd("trace"))=1 d trace("getGlobalList: "_response_" sent") 
  ;s glo=""
  ;f  s glo=$o(list(glo)) q:glo=""  d
  ;. s gloRef=$e(glo,2,$l(glo))
  ;. s response="$"_$l(gloRef)_crlf_gloRef_crlf
  ;. w response
- ;. i $g(^zewd("trace"))=1 d trace^%zewdAPI("getGlobalList: "_response_" sent") 
+ ;. i $g(^zewd("trace"))=1 d trace("getGlobalList: "_response_" sent") 
  s arrString="["
  s glo="",comma=""
  f  s glo=$o(list(glo)) q:glo=""  d
@@ -443,7 +448,7 @@ getGlobalList()
  s arrString=arrString_"]"
  s response="$"_$l(arrString)_crlf_arrString_crlf
  w response
- i $g(^zewd("trace"))=1 d trace^%zewdAPI("getGlobalList: "_response_" sent")  ;
+ i $g(^zewd("trace"))=1 d trace("getGlobalList: "_response_" sent")  ;
  QUIT
  ;
 getGlobals()
@@ -462,13 +467,13 @@ getGlobals()
  f  s glo=$o(list(glo)) q:glo=""  s count=count+1
  s response="*"_count_crlf
  w response
- i $g(^zewd("trace"))=1 d trace^%zewdAPI("getGlobalList: "_response_" sent") 
+ i $g(^zewd("trace"))=1 d trace("getGlobalList: "_response_" sent") 
  s glo=""
  f  s glo=$o(list(glo)) q:glo=""  d
  . s gloRef=$e(glo,2,$l(glo))
  . s response="$"_$l(gloRef)_crlf_gloRef_crlf
  . w response
- . i $g(^zewd("trace"))=1 d trace^%zewdAPI("getGlobalList: "_response_" sent") 
+ . i $g(^zewd("trace"))=1 d trace("getGlobalList: "_response_" sent") 
  QUIT
  ;
 get(input)
@@ -517,7 +522,7 @@ getGlobal(input)
  s response="$"_$l(json)_crlf_json_crlf
  ;
  w response
- i $g(^zewd("trace"))=1 d trace^%zewdAPI("getGlobal: response="_response)
+ i $g(^zewd("trace"))=1 d trace("getGlobal: response="_response)
  QUIT
  ;
 multiGet(input)
@@ -571,7 +576,7 @@ multiGet(input)
  s response="$"_$l(json)_crlf_json_crlf
  ;
  w response
- i $g(^zewd("trace"))=1 d trace^%zewdAPI("multiGet: response="_response)
+ i $g(^zewd("trace"))=1 d trace("multiGet: response="_response)
  QUIT
  ;
 kill(input)
@@ -581,26 +586,41 @@ kill(input)
  ; KILL myglobal["1","xx yy",3]
  ; +OK
  ;
- s nsp=$l(input," ")
- f i=1:1:nsp d
- . s glo=$p(input," ",i)
- . q:glo=""
- . s p1=$p(glo,"[",1)
- . s p2=$p(glo,"[",2,2000)
- . s p2=$e(p2,1,$l(p2)-1)
- . s glo=p1_"("_p2_")"
- . i glo["()" d
- . . s len=$l(glo)
- . . i $e(glo,len-1,len)="()" s glo=$e(glo,1,len-2)
- . i glo'["zmwire" s glo(glo)=""
- s glo=""
- f  s glo=$o(glo(glo)) q:glo=""  d
- . s x="k ^"_glo
+ ;s nsp=$l(input," ")
+ ;f i=1:1:nsp d
+ ;. s glo=$p(input," ",i)
+ ;. q:glo=""
+ ;. s p1=$p(glo,"[",1)
+ ;. s p2=$p(glo,"[",2,2000)
+ ;. s p2=$e(p2,1,$l(p2)-1)
+ ;. s glo=p1_"("_p2_")"
+ ;. i glo["()" d
+ ;. . s len=$l(glo)
+ ;. . i $e(glo,len-1,len)="()" s glo=$e(glo,1,len-2)
+ ;. i glo'["zmwire" s glo(glo)=""
+ ;s glo=""
+ ;f  s glo=$o(glo(glo)) q:glo=""  d
+ ;. s x="k ^"_glo
  . s $zt=$$zt()
- . x x
- . s $zt=""
+ ;. x x
+ ;. s $zt=""
+ ;
+ s glo=input
+ s p1=$p(glo,"[",1)
+ s p2=$p(glo,"[",2,2000)
+ s p2=$e(p2,1,$l(p2)-1)
+ s glo=p1_"("_p2_")"
+ i glo["()" d
+ . s len=$l(glo)
+ . i $e(glo,len-1,len)="()" s glo=$e(glo,1,len-2)
+ i glo'["zmwire" s glo(glo)=""
+
+ s x="k ^"_glo
+ s $zt=$$zt()
+ x x
+ s $zt=""
  s response="+ok"_crlf
- i $g(^zewd("trace"))=1 d trace^%zewdAPI("kill: response="_response)
+ i $g(^%zewd("trace"))=1 d trace("kill: response="_response)
  w response
  QUIT
  ;
@@ -617,7 +637,7 @@ data(input)
  s $zt=$$zt()
  x x
  s $zt=""
- i $g(^zewd("trace"))=1 d trace^%zewdAPI("input="_input_"; data="_data)
+ i $g(^zewd("trace"))=1 d trace("input="_input_"; data="_data)
  s output=":"_data_crlf
  w output
  QUIT
@@ -662,7 +682,9 @@ runTransaction(input)
  . . . s ref=ref_"(",comma=""
  . . . f j=1:1 q:'$d(props(i,"subscripts",j))  d
  . . . . s ref=ref_comma_""""_props(i,"subscripts",j)_"""",comma=","
- . . . s ref=ref_")="""_$g(props(i,"value"))_""""
+ . . . s value=$g(props(i,"value"))
+ . . . i value="zmwire_null_value" s value=""
+ . . . s ref=ref_")="""_value_""""
  . . x ref
  . i method="kill" d  q:stop
  . . s globalName=$g(props(i,"globalName"))
@@ -681,7 +703,7 @@ runTransaction(input)
  i error'="" s output="-"_error_crlf w output QUIT
  s response="+ok"_crlf
  w response
- i $g(^zewd("trace"))=1 d trace^%zewdAPI("transaction: response="_response)
+ i $g(^zewd("trace"))=1 d trace("transaction: response="_response)
  QUIT
  ;
 setJSON(input)
@@ -721,7 +743,7 @@ setJSON(input)
  x ref
  s response="+OK"_crlf
  w response
- i $g(^zewd("trace"))=1 d trace^%zewdAPI("setJSON: response="_response)
+ i $g(^zewd("trace"))=1 d trace("setJSON: response="_response)
  ;
  QUIT
  ;
@@ -747,9 +769,9 @@ getJSON(input)
  i '$d(arr) d
  . s response="$-1"_crlf
  e  d
- . s json=$$arrayToJSON^%zewdJSON("arr")
+ . s json=$$arrayToJSON("arr")
  . s response="$"_$l(json)_crlf_json_crlf
- i $g(^zewd("trace"))=1 d trace^%zewdAPI("getJSON: response="_response)
+ i $g(^zewd("trace"))=1 d trace("getJSON: response="_response)
  ;
  w response
  ;
@@ -885,7 +907,7 @@ nextSubscript(input,direction)
  s response=response_"""dataValue"":"""_value_"""}"
  ;
  s response="$"_$l(response)_crlf_response_crlf
- i $g(^zewd("trace"))=1 d trace^%zewdAPI("nextsubscript: response="_response)
+ i $g(^zewd("trace"))=1 d trace("nextsubscript: response="_response)
  w response
  ;
  QUIT
@@ -1044,7 +1066,7 @@ getAllSubscripts(input)
  s $zt=$$zt()
  x x
  s $zt=""
- i 'exists s output="$-1"_crlf w output QUIT
+ i 'exists s output="$2"_crlf_"[]"_crlf w output QUIT
  ;
  s subs=""
  s subs1=subs i subs1["""" s subs1=$$replaceAll(subs1,"""","""""")
@@ -1468,7 +1490,7 @@ ts()
  ;
 relinkRoutines()
  n list,rou,xrou
- i $g(^zewd("trace"))=1 d trace^%zewdAPI("Process "_$j_": Relinking...")
+ i $g(^zewd("trace"))=1 d trace("Process "_$j_": Relinking...")
  s rou=""
  f  s rou=$view("RTNNEXT",rou) q:rou=""  d
  . i rou="zmwire" q
@@ -1482,9 +1504,9 @@ relinkRoutines()
  . s xrou=rou
  . i $e(xrou,1)="%" s xrou="_"_$e(xrou,2,$l(xrou))
  . zl xrou
- . i $g(^zewd("trace"))=1 d trace^%zewdAPI("relinked "_rou)
+ . i $g(^zewd("trace"))=1 d trace("relinked "_rou)
  s ^zmwire("relink","process",$j)=""
- i $g(^zewd("trace"))=1 d trace^%zewdAPI("Process "_$j_": Relinking complete")
+ i $g(^zewd("trace"))=1 d trace("Process "_$j_": Relinking complete")
  QUIT ""
  ;
 relink ;
@@ -1492,4 +1514,265 @@ relink ;
  k ^zmwire("relink","process")
  QUIT
  ;
+arrayToJSON(name)
+ n subscripts
+ i '$d(@name) QUIT "[]"
+ QUIT $$walkArray("",name)
+ ;
+walkArray(json,name,subscripts)
+ ;
+ n allNumeric,arrComma,brace,comma,count,cr,dd,i,no,numsub,dblquot,quot
+ n ref,sub,subNo,subscripts1,type,valquot,value,xref,zobj
+ ;
+ s cr=$c(13,10),comma=","
+ s (dblquot,valquot)=""""
+ s dd=$d(@name)
+ i dd=1!(dd=11) d  i dd=1 QUIT json
+ . s value=@name
+ . i value'[">" q
+ . s json=$$walkArray(json,value,.subscripts)
+ s ref=name_"("
+ s no=$o(subscripts(""),-1)
+ i no>0 f i=1:1:no d
+ . s quot=""""
+ . i subscripts(i)?."-"1N.N s quot=""
+ . s ref=ref_quot_subscripts(i)_quot_","
+ s ref=ref_"sub)"
+ s sub="",numsub=0,subNo=0,count=0
+ s allNumeric=1
+ f  s sub=$o(@ref) q:sub=""  d  q:'allNumeric
+ . i sub'?1N.N s allNumeric=0
+ . s count=count+1
+ . i sub'=count s allNumeric=0
+ ;i allNumeric,count=1 s allNumeric=0
+ s allNumeric=0
+ i allNumeric d
+ . s json=json_"["
+ e  d
+ . s json=json_"{"
+ s sub=""
+ f  s sub=$o(@ref) q:sub=""  d
+ . s subscripts(no+1)=sub
+ . s subNo=subNo+1
+ . s dd=$d(@ref)
+ . i dd=1 d
+ . . s value=@ref
+ . . i value["/" s value=$$replaceAll(value,"\","\\")
+ . . s value=$$removeControlChars(value)
+ . . i 'allNumeric d
+ . . . i sub["\" s sub=$$replaceAll(sub,"\","\\")
+ . . . s sub=$$removeControlChars(sub)
+ . . . s json=json_""""_sub_""":"
+ . . s type="literal"
+ . . i $$numeric(value) s type="numeric"
+ . . i value="true"!(value="false") s type="boolean"
+ . . i $e(value,1)="{",$e(value,$l(value))="}" s type="variable"
+ . . i type="literal" s value=valquot_value_valquot
+ . . d
+ . . . s json=json_value_","
+ . k subscripts1
+ . m subscripts1=subscripts
+ . i dd>9 d
+ . . ;i sub?1N.N d
+ . . ;. i subNo=1 d
+ . . ;. . s numsub=1
+ . . ;. . s json=$e(json,1,$l(json)-1)_"["
+ . . ;e  d
+ . . ;. s json=json_""""_sub_""":"
+ . . i sub["\" s sub=$$replaceAll(sub,"\","\\")
+ . . s sub=$$removeControlChars(sub)
+ . . s json=json_""""_sub_""":"
+ . . s json=$$walkArray(json,name,.subscripts1)
+ . . d
+ . . . s json=json_","
+ ;
+ s json=$e(json,1,$l(json)-1)
+ i allNumeric d
+ . s json=json_"]"
+ e  d
+ . s json=json_"}"
+ QUIT json ; exit!
+ ;
+trace(text,clear) ; trace  ;
+ n i
+ s text=$g(text)
+ i $g(clear)=1 k ^%zewdTrace
+ s i=$increment(^%zewdTrace)
+ s ^%zewdTrace(i)=text
+ QUIT
+ ;
+parseJSON(jsonString,propertiesArray,mode)
+ ;
+ n array,arrRef,buff,c,error
+ ;
+ k propertiesArray
+ s error=""
+ s buff=$g(jsonString)
+ s buff=$$replaceAll(buff,"\""","\'")
+ s arrRef="array"
+ s c=$e(buff,1)
+ s buff=$e(buff,2,$l(buff))
+ d
+ . i c="{" d  q
+ . . n prefix
+ . . s prefix="""zobj1"""
+ . . i $g(mode)=1 s prefix=""
+ . . s error=$$parseJSONObject(.buff,prefix)
+ . . q:error
+ . . i buff'="" s error=1
+ . i c="[" d  q
+ . . n prefix
+ . . s prefix=1
+ . . i $g(mode)=1 s prefix=""
+ . . s error=$$parseJSONArray(.buff,prefix)
+ . . q:error
+ . . i buff'="" s error=1
+ . s error=1
+ i error=1 QUIT "Invalid JSON"
+ m propertiesArray=array
+ QUIT ""
+ ;
+parseJSONObject(buff,subs)
+ n c,error,name,stop,subs2,value,x
+ s stop=0,name="",error=""
+ f  d  q:stop
+ . s c=$e(buff,1)
+ . i c="" s error=1,stop=1 q
+ . s buff=$e(buff,2,$l(buff))
+ . i c="[" s error=1,stop=1 q
+ . i c="}" d  q
+ . . s stop=1
+ . i c=":" d  q
+ . . n subs2
+ . . s value=$$getJSONValue(.buff)
+ . . d  q:stop
+ . . . i value="" q
+ . . . i $e(value,1)="""",$e(value,$l(value))="""" q
+ . . . i value="true"!(value="false") s value=""""_value_"""" q
+ . . . i $$numeric(value) q
+ . . . s error=1,stop=1
+ . . i value="",$e(buff,1)="{" d  q
+ . . . i $e(name,1)'="""",$e(name,$l(name))'="""" s name=""""_name_""""
+ . . . s subs2=subs
+ . . . i subs'="" s subs2=subs2_","
+ . . . s subs2=subs2_name
+ . . . i $g(mode)="" s subs2=subs2_",""zobj1"""
+ . . . s buff=$e(buff,2,$l(buff))
+ . . . s error=$$parseJSONObject(.buff,subs2)
+ . . . i error=1 s stop=1 q
+ . . i value="",$e(buff,1)="[" d  q
+ . . . ;s subs2=subs_","""_name_""",""1"""
+ . . . i $e(name,1)'="""",$e(name,$l(name))'="""" s name=""""_name_""""
+ . . . s subs2=subs
+ . . . i subs'="" s subs2=subs2_","
+ . . . s subs2=subs2_name
+ . . . s buff=$e(buff,2,$l(buff))
+ . . . s error=$$parseJSONArray(.buff,subs2)
+ . . . i error=1 s stop=1 q
+ . . i $e(name,1)="""",$e(name,$l(name))'="""" s error=1,stop=1 q
+ . . i $e(name,1)'="""",$e(name,$l(name))="""" s error=1,stop=1 q
+ . . i $e(name,1)'="""",$e(name,$l(name))'="""" s name=""""_name_""""
+ . . s subs2=subs
+ . . i subs'="" s subs2=subs2_","
+ . . s subs2=subs2_name
+ . . i value["\'" s value=$$replaceAll(value,"\'","""""")
+ . . s x="s "_arrRef_"("_subs2_")="_value
+ . . x x
+ . i c="," s name="" q
+ . s name=name_c q
+ QUIT error
+ ;
+parseJSONArray(buff,subs)
+ n c,error,name,no,stop,subs2,value,x
+ s stop=0,name="",no=0,error=""
+ f  d  q:stop
+ . s c=$e(buff,1)
+ . i c="" s error=1,stop=1 q
+ . s buff=$e(buff,2,$l(buff))
+ . i c=":" s error=1,stop=1 q
+ . i c="]" d  q
+ . . s stop=1
+ . . i name="" q
+ . . s no=no+1
+ . . s subs2=subs
+ . . i subs'="" s subs2=subs2_","
+ . . s subs2=subs2_no
+ . . s x="s "_arrRef_"("_subs2_")="_name
+ . . x x
+ . i c="[" d  q
+ . . s no=no+1
+ . . s subs2=subs
+ . . i subs'="" s subs2=subs2_","
+ . . s subs2=subs2_no
+ . . ;s buff=$e(buff,2,$l(buff))
+ . . s error=$$parseJSONArray(.buff,subs2)
+ . . i error=1 s stop=1 q
+ . i c="{" d  q
+ . . s no=no+1
+ . . s subs2=subs
+ . . i subs'="" s subs2=subs2_","
+ . . s subs2=subs2_no
+ . . i $g(mode)="" s subs2=subs2_",""zobj1"""
+ . . ;s buff=$e(buff,2,$l(buff))
+ . . s error=$$parseJSONObject(.buff,subs2)
+ . . i error=1 s stop=1 q
+ . s subs2=subs
+ . i subs'="" s subs2=subs2_","
+ . s subs2=subs2_""""_name_""""
+ . i c="," d  q
+ . . i name="" q
+ . . d  q:stop
+ . . . i $e(name,1)="""",$e(name,$l(name))="""" q
+ . . . ;i value="true"!(value="false") s value=""""_value_"""" q
+ . . . i $$numeric(name) q
+ . . . s error=1,stop=1
+ . . s no=no+1
+ . . s subs2=subs
+ . . i subs'="" s subs2=subs2_","
+ . . s subs2=subs2_""""_no_""""
+ . . s x="s "_arrRef_"("_subs2_")="_name
+ . . x x
+ . . s name=""
+ . s name=name_c q
+ QUIT error
+ ;
+getJSONValue(buff)
+ n c,isLiteral,lc,stop,value
+ s stop=0,value="",isLiteral=0,lc=""
+ f  d  q:stop  q:buff=""
+ . s c=$e(buff,1)
+ . i value="",c="""" s isLiteral=1
+ . i 'isLiteral,c="[" s stop=1 q
+ . i 'isLiteral,c="{" s stop=1 q
+ . i c="}" d  q:stop
+ . . i isLiteral,lc'="""" q
+ . . s stop=1
+ . i c="," d  q:stop
+ . . i isLiteral,lc'="""" q
+ . . s stop=1
+ . s buff=$e(buff,2,$l(buff))
+ . s value=value_c
+ . s lc=c
+ QUIT value
+ ;
+numeric(value)
+ i $e(value,1)=0,$l(value)>1 QUIT 0
+ i value?1N.N QUIT 1
+ i value?1"-"1N.N QUIT 1
+ i value?1N.N1"."1N.N QUIT 1
+ i value?1"-"1N.N1"."1N.N QUIT 1
+ i value?1"."1N.N QUIT 1
+ i value?1"-."1N.N QUIT 1
+ QUIT 0
+ ;
+removeControlChars(string)
+ n c,i,newString
+ s newString=""
+ f i=1:1:$l(string) d
+ . s c=$e(string,i)
+ . i $a(c)<32 s c="~"
+ . s newString=newString_c
+ QUIT newString
+ ;
+
 
